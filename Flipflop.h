@@ -5,8 +5,11 @@
 #include "Cell.h"
 
 class FlipFlop: public Cell {
-	bool visited;
 public:
+	bool visited;
+	delay setup[4];
+	delay hold[4];
+
 	FlipFlop(cellType type, string name, string logic_string) {
 		this->type = type;
 		this->name = name;
@@ -15,15 +18,22 @@ public:
 virtual ~FlipFlop(){};
 
 
-//	void setSetup(MAXMIN AnlsType, Transitions Tr, int val) {
-//		setupdata[2 * AnlsType + Tr] = val;
-//
-//	}
-//
-//	int getSetup(MAXMIN AnlsType, Transitions Tr) {
-//		return setupdata[2 * AnlsType + Tr];
-//
-//	}
+	void setSetup(MAXMIN AnlsType, Transitions Tr, int val) {
+	setup[2 * AnlsType + Tr] = val;
+	}
+
+	int getSetup(MAXMIN AnlsType, Transitions Tr) {
+		return setup[2 * AnlsType + Tr];
+
+	}
+	void setHold(MAXMIN AnlsType, Transitions Tr, int val) {
+	setup[2 * AnlsType + Tr] = val;
+	}
+
+	int getHold(MAXMIN AnlsType, Transitions Tr) {
+		return setup[2 * AnlsType + Tr];
+
+	}
 
 
 };

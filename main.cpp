@@ -10,32 +10,18 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include <iostream>
-#include <stdlib.h>
-#include "Net.h"
-#include <functional>
-#include <sstream>
-
-#include <fstream>
-#include <stack>
-#include <vector>
-#include <string.h>
-#include <string>
-#include <map>
-#include <unordered_map>
-#include <queue>
 //------------------------------------------------------------
 #include "Cell.h"
 #include "Net.h"
 #include "OutputNet.h"
-
 #include "InputNet.h"
-
+#include "enums.h"
 using namespace std;
 //------------------------------------------------------------
 #define BUFFZISE 1024
+//global
+int pathid=0;
 
-//#include <basic_string.h>
 queue<Cell*> InputTable;
 queue<Cell*> InputDataTable;
 queue<Cell*> InputClkTable;

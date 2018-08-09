@@ -18,16 +18,13 @@ public:
 	std::map<input_pin, Net* > inMap;
 	map<output_pin, Net* > outMap;
 	map<pin, load> pinLoadMap;
-	// flag = 1 if visited
+	map<pin, margin> WCmarg[2];
+	Transitions WCtr[2];
 public:
 	virtual ~Cell(){
 		delete Template;
 	}
-//	Cell() {
-//		Template = NULL;
-//		type = COMB;
-//	}
-//	;
+
 	Cell(){
 		Template = NULL;
 		type =UNKNOWN;
@@ -63,11 +60,23 @@ public:
 				in, out)];
 		return table->GetTable(AnlsType, Tr, inslope, outload);
 	}
-	bool PossiblTr(input_pin in, output_pin out, Transitions Tr);
+	bool PossiblTr(input_pin in, output_pin out, Transitions Tr){
+		int Poss=this->Template->delayTable[make_pair(in,out)].GetTable(MAX,Tr,0,0);
+		return Poss==-1 ? false : true;
+	}
 	void updateWCdat(pin PIN, margin Margin, MAXMIN mode,
-			Transitions Tr/*FALL OR RISE*/); // if less than
-	margin getWCdat(input_pin input, MAXMIN MODE,
-			Transitions inPossiTr /*FALL OR RISE*/);
+			Transitions Tr/*FALL OR RISE*/){
+		if(WCmarg[mode].find(PIN)==WCmarg[mode].end()){
+			WCmarg[mode][PIN]=Margin;
+			WCtr[mode]=Tr;
+		}else{
+			WCmarg[mode][PIN] = WCmarg[mode][PIN]>Margin ? Margin : WCmarg[mode][PIN];
+			WCtr[mode]=WCmarg[mode][PIN]>Margin ? Tr: WCtr[mode];
+		}
+	}
+	margin getWCdat(input_pin input, MAXMIN MODE){
+		return WCmarg[MODE][input];
+	}
 	static void print() {
 		static int cnt = 0;
 		if (cnt == 0) {

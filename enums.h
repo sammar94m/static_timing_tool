@@ -13,6 +13,15 @@
 #include <queue>
 #include <limits.h>
 #include <limits>
+#include <sstream>
+#include <iostream>
+#include <stdlib.h>
+#include <functional>
+#include <fstream>
+#include <stack>
+#include <vector>
+#include <string.h>
+#include <string>
 
 using namespace std;
 
@@ -27,6 +36,10 @@ typedef std::string input_pin;
 typedef std::string output_pin;
 typedef std::string pin;
 
+//global
+extern int pathid;
+extern map<int,string> MAXpaths;
+extern map<int,string> MINpaths;
 
 
 enum cellType {
