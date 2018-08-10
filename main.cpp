@@ -16,7 +16,11 @@
 #include "OutputNet.h"
 #include "InputNet.h"
 #include "enums.h"
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+
 using namespace std;
+using namespace boost;
 //------------------------------------------------------------
 #define BUFFZISE 1024
 //global
@@ -41,7 +45,7 @@ Transitions getTransitions(string tr);
 const vector<string> splitString(const string& s, const char& c);
 
 template<typename T>
-void allocate_table(T*** arr, int n, int m, const vector<string>& vec);
+void allocate_table(T** arr, int n, int m, const vector<string>& vec);
 
 template<typename T>
 void deallocate_table(T*** arr, int n);
@@ -67,24 +71,27 @@ void LibraryFile(const string& filename) {
 		return;
 	}
 
-	while (!myfile.eof()) {
 		vector<string> vec;
-		char tmp[BUFFZISE];
-		myfile.getline(tmp, BUFFZISE);
-		string s(tmp);
+		string s;
+		getline(myfile,s,'\r');
 
 		if (s == "Library file:") {
 			CellTemplate* cellTemplate = NULL;
 			while (!myfile.eof()) {
 				vec = readLine(myfile);
+//				for(int i=0;i<vec.size();i++)
+//					cout<<" "<<vec[i];
+//				cout<<endl;
 				if (vec.empty()) {
 					break;
 				}
 
 				pin PIN;
 				load LOAD;
-				if (vec[0] == string("CELL")) {
+				if (vec[0] == "CELL") {
+					cout<<"CELL"<<endl;
 					cellTemplate = new CellTemplate(vec[1]);
+					if(!cellTemplate){ cout<<"failed to alloc cellTemplate"<<endl;}
 					CellTemplateTable[vec[1]] = cellTemplate;
 
 				} else if (vec[0] == "PIN") {
@@ -94,15 +101,18 @@ void LibraryFile(const string& filename) {
 					cellTemplate->temp_pinLoadMap[PIN] = LOAD;
 				} else if (vec[0] == "IN_SLOPE_POINTS") {
 					for (unsigned int i = 1; i < vec.size(); i++) {
-						cellTemplate->IN_SLOPE_POINTS[i - 1] = atoi(
-								vec[i].c_str());
+						if(vec[i]!="")
+						cellTemplate->IN_SLOPE_POINTS.push_back(atoi(
+								vec[i].c_str()));
 					}
 				} else if (vec[0] == "OUT_LOAD_POINTS") {
 					for (unsigned int i = 1; i < vec.size(); i++) {
-						cellTemplate->OUT_LOAD_POINTS[i - 1] = atoi(
-								vec[i].c_str());
+						if(vec[i]!="")
+						cellTemplate->OUT_LOAD_POINTS.push_back( atoi(
+								vec[i].c_str()));
 					}
 				} else if (vec[0] == "ARC") {
+					cout<<"ARC"<<endl;
 					input_pin inpin = vec[1];
 					output_pin outpin = vec[2];
 
@@ -111,43 +121,49 @@ void LibraryFile(const string& filename) {
 					//cellTemplate->slopeTable.insert(pair<input_pin, output_pin>(inpin, outpin)) = ;
 
 					while (!myfile.eof()) {
-						myfile.getline(tmp, BUFFZISE);
-						string s(tmp);
 						vec = readLine(myfile);
-						if (vec.empty()) {
+						if (vec.empty() || vec[0]=="") {
 							break;
 						}
 
 						void ** table = NULL;
 						int rows = cellTemplate->IN_SLOPE_POINTS.size();
 						int cols = cellTemplate->OUT_LOAD_POINTS.size();
-						if (vec[0] == "DELAY") {
 
-							allocate_table<delay>((delay***) (&table), rows,
-									cols, vec);
-						} else {
-							allocate_table<slope>((slope***) (&table), rows,
-									cols, vec);
+						//cout<<rows<<cols<<endl;
+						vector<string> tableSpec = splitString(vec[0], '_');
+						vector<string> tablevec;
+						for(int i=1;i<vec.size();i++){
+							if(vec[i]!="")
+							tablevec.push_back(vec[i]);
 						}
 
-						vector<string> tableSpec = splitString(vec[0], '_');
+						if (tableSpec[0] == "DELAY") {
+							allocate_table<delay>((delay**) (table), rows,
+									cols, tablevec);
+						} else {
+							allocate_table<slope>((slope**) (table), rows,
+									cols, tablevec);
+						}
+
+
 						MAXMIN AnlsType = tableSpec[2] == "MAX" ? MAX : MIN;
 						Transitions Tr = getTransitions(tableSpec[3]);
 
-						if (vec[0] == "DELAY") {
+						if (tableSpec[0] == "DELAY") {
 							cellTemplate->delayTable[pair<input_pin, output_pin>(
 									inpin, outpin)].AddTable((delay**) table,
 									AnlsType, Tr);
+
 						} else {
 							cellTemplate->slopeTable[pair<input_pin, output_pin>(
 									inpin, outpin)].AddTable((slope**) table,
 									AnlsType, Tr);
+
 						}
-						if (endOfTemplate(myfile)
-								&& cellTemplate->template_name != "FF") {
-							break;
-						}
+						cout<<"  good till now"<<endl;
 					}
+
 				} else if (vec[0] == "CHECK") {
 					if (cellTemplate->template_name == "FF") {
 						int i = 4;
@@ -157,16 +173,12 @@ void LibraryFile(const string& filename) {
 									atoi(vec[1].c_str());
 						}
 					}
-					if (endOfTemplate(myfile)) {
-						break;
-					}
+
 				}
 
 			}
-		} else {
-			cout << "file was not opened" << endl;
 		}
-	}
+
 
 	myfile.close();
 }
@@ -180,9 +192,9 @@ void DesignConstraintsFile(const string& filename) {
 	}
 	while (!myfile.eof()) {
 		vector<string> vec;
-		char tmp[BUFFZISE];
-		myfile.getline(tmp, BUFFZISE);
-		string s(tmp);
+		string s;
+		getline(myfile,s,'\r');
+
 
 		if (s == "Design constraints file:") {
 			Net* net = NULL;
@@ -355,10 +367,10 @@ int main(int argc, char* argv[]) {
 	LibraryFile("LibraryFile.txt");
 	cout << " done reading" << endl;
 
-	for(auto it = CellTemplateTable.begin() ; it != CellTemplateTable.end(); ++it ){
-		cout<<it->first<<" : "<<endl;
-		it->second->print();
-	}
+//	for(auto it = CellTemplateTable.begin() ; it != CellTemplateTable.end(); ++it ){
+//		cout<<it->first<<" : "<<endl;
+//		it->second->print();
+//	}
 
 //	cout << " reading DesignConstraintsFile" << endl;
 //	DesignConstraintsFile("DesignConstraintsFile.txt");
@@ -410,31 +422,21 @@ const vector<string> splitString(const string& s, const char& c) {
 }
 
 template<typename T>
-void allocate_table(T*** arr, int n, int m, const vector<string>& vec) {
-	*arr = (T**) malloc(n * sizeof(T*));
-	if (*arr == NULL)
-		return;
-	for (int i = 0; i < n; i++) {
-		(*arr)[i] = (T*) malloc(m * sizeof(T));
-		if ((*arr)[i] == NULL) {
-			for (int j = 0; j < i; j++) {
-				free((*arr)[j]);
-			}
-			free(*arr);
-			return;
-		}
-	}
-	if (arr) {
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < m; j++) {
+void allocate_table(T** arr, int rows, int cols, const vector<string>& vec) {
 
-				*arr[i][j] = (T) stoi(vec[i * m + j], 0, 10);
-			}
-		}
-	} else {
-		cout << "table allocation failed" << endl;
+	T** matrix = new T*[rows];
+	for (int i = 0; i < rows; ++i)
+	    matrix[i] = new T[cols];
+
+	arr=matrix;
+
+	for (int i=0; i<vec.size();i++){
+		arr[i/rows][i%cols] = (T) stoi(vec[i], 0, 10);
 	}
+
+
 }
+
 template<typename T>
 void deallocate_table(T*** arr, int n) {
 	for (int i = 0; i < n; i++)
@@ -482,32 +484,47 @@ bool endOfTemplate(ifstream& myfile) {
 //	}
 //}
 
-void split(const string &s, const char* delim, vector<string> & v) {
-// to avoid modifying original string
-// first duplicate the original string and return a char pointer then free the memory
-	char * dup = strdup(s.c_str());
-	char * token = strtok(dup, delim);
-	while (token != NULL) {
-		v.push_back(string(token));
-		// the call is treated as a subsequent calls to strtok:
-		// the function continues from where it left in previous invocation
-		token = strtok(NULL, delim);
-	}
-	free(dup);
-}
+//void split(const string &s, const char* delim, vector<string> & v) {
+//// to avoid modifying original string
+//// first duplicate the original string and return a char pointer then free the memory
+//	char * dup = strdup(s.c_str());
+//	char * token = strtok(dup, delim);
+//	while (token != NULL) {
+//		v.push_back(string(token));
+//		// the call is treated as a subsequent calls to strtok:
+//		// the function continues from where it left in previous invocation
+//		token = strtok(NULL, delim);
+//	}
+//	free(dup);
+//}
 
 vector<string> readLine(ifstream& myfile) {
 	vector<string> vec;
-	char tmp[BUFFZISE];
-	myfile.getline(tmp, BUFFZISE);
-	string s(tmp);
+	string line;
+	getline(myfile,line);
 	string delim = " ():,->";
-	split(s, delim.c_str(), vec);
-	for (unsigned int i = 0; i < vec.size(); i++) {
-		if (*(vec[i].end()) == ',') {
-			vec[i].erase(vec[i].end());
+	boost::split(vec,line,boost::is_any_of(" ():,->\r"));
+
+//	for (unsigned int i = 0; i < vec.size(); i++) {
+//		if (*(vec[i].end()) == ',') {
+//			vec[i].erase(vec[i].end());
+//		}
+//	}
+
+	vector<string> goodvec;
+	for (unsigned int i = 0; i < vec.size(); i++)
+		if(vec[i]!="")
+			goodvec.push_back(vec[i]);
+
+	vector<string>::iterator itr = vec.begin();
+	for(unsigned int i = 0; i < vec.size(); i++){
+		if(i<goodvec.size()){
+			vec[i]=goodvec[i];
+		}else{
+			vec[i]="";
 		}
 	}
+
 	return vec;
 }
 
