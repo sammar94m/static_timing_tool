@@ -34,6 +34,14 @@ virtual ~FlipFlop(){};
 		return setup[2 * AnlsType + Tr];
 
 	}
+	int getClkAR(){
+		for(auto rcvIT=inMap["CLK"]->receivers.begin();rcvIT<inMap["CLK"]->receivers.end();++rcvIT){
+			if((rcvIT.operator *())->cell==this){
+				return inMap["CLK"]->ClkArtime[(rcvIT.operator *())].RISE_AR;
+			}
+		}
+		return -1;
+	}
 
 
 };

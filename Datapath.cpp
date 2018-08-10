@@ -49,19 +49,24 @@ void pushCelltext(stringstream& S,string cell_name, string cell_template , outpu
 		<< "	" << "\n";
 }
 
-margin dataPathDelayCalcAux(pin input, slope inslope, Cell* currCell, queue<Cell*>& Cellqueue, delay cumdelay,Transitions inPossiTr, MAXMIN MODE, string S) {
+margin dataPathDelayCalcAux(pin input, slope inslope, Cell* currCell, queue<Cell*>& Cellqueue, delay cumdelay,Transitions inPossiTr, MAXMIN MODE, string S,delay Reftime) {
 	stringstream SS;
 	SS << S;
 	if ((currCell->type == FlIPFlOP && ((FlipFlop*) currCell)->visited == false) || currCell->type == OUTCELL) {
+		int skew=(((FlipFlop*)currCell)->getClkAR()-Reftime)*(1-2*MODE==MIN);
 		margin tmp=cumdelay-((FlipFlop*)currCell)->getSetup(MODE,inPossiTr);
 		pushCelltext(SS,currCell->name,currCell->Template->template_name,"",FALL,0,0,(delay)tmp,"");
-		SS << "pathid = "<< pathid << "\n";
 		if(MODE==MAX){
-			MAXpaths[pathid]=SS.str();
+			MAXpaths[pathidmax]=SS.str();
+			SS << "pathid = "<< pathidmax << "\n";
+			pathidmax++;
 
 		}else{
-			MINpaths[pathid]=SS.str();
+			MINpaths[pathidmin]=SS.str();
+			SS << "pathid = "<< pathidmin << "\n";
+			pathidmin++;
 		}
+
 		return tmp;
 	}
 	for (auto pinIT = currCell->outMap.begin(); pinIT != currCell->outMap.end(); ++pinIT) {

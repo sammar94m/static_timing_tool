@@ -6,14 +6,14 @@
 
 
 class clockdat {
-	int FALL_AR;
-	slope FALL_SLOPE;
 	int RISE_AR;
+	slope FALL_SLOPE;
 	slope RISE_SLOPE;
+	int low; //clk param
+	int high; //clk param
 public:
-	clockdat(int FALL_AR, slope FALL_SLOPE, int RISE_AR, slope RISE_SLOPE) :
-			FALL_AR(FALL_AR), FALL_SLOPE(FALL_SLOPE), RISE_AR(RISE_AR), RISE_SLOPE(
-					RISE_SLOPE) {
+	clockdat(  int RISE_AR, slope FALL_SLOPE, slope RISE_SLOPE,int low, int high) :
+			 FALL_SLOPE(FALL_SLOPE), RISE_AR(RISE_AR), RISE_SLOPE(RISE_SLOPE), low(low), high(high) {
 	}
 	clockdat();
 };

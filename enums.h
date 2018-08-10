@@ -37,7 +37,7 @@ typedef std::string output_pin;
 typedef std::string pin;
 
 //global
-extern int pathid;
+extern int pathidmax,pathidmin;
 extern map<int,string> MAXpaths;
 extern map<int,string> MINpaths;
 

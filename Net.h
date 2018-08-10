@@ -14,14 +14,12 @@ public:
 	string name;
 	netType type;
 	bool isClk;
-	int low; //clk param
-	int high; //clk param
 	pair<Cell*, pin> driver; //cell* is the driver , string is the pin
 	list<receiver*> receivers; //
-
+	map<receiver*,clockdat> ClkArtime; //refrence clock rise
 	//--------------
 	Net(string name, netType type, bool isClk, int low, int high) :
-			name(name), type(type), isClk(isClk), low(low), high(high) {
+			name(name), type(type), isClk(isClk) {
 	}
 	;
 
@@ -32,6 +30,9 @@ public:
 	}
 	void add_receiver(Cell* cell, pin pin_t) {
 		receivers.push_front(new receiver(cell, pin_t));
+	}
+	void set_clkdat(clockdat& clk){
+		ClkArtime=clk;
 	}
 };
 

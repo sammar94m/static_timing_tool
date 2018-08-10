@@ -20,7 +20,8 @@ using namespace std;
 //------------------------------------------------------------
 #define BUFFZISE 1024
 //global
-int pathid=0;
+int pathidmax=0;
+int pathidmin=0;
 
 queue<Cell*> InputTable;
 queue<Cell*> InputDataTable;
