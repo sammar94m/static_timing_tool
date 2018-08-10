@@ -347,17 +347,18 @@ void NetlistFileFormat(const string& filename) {
 int main(int argc, char* argv[]) {
 
 
-	cout<< argc <<endl;
-	for(int i=0; i<argc;i++)
-		cout<<string(argv[i])<<endl;
+//	cout<< argc <<endl;
+//	for(int i=0; i<argc;i++)
+//		cout<<string(argv[i])<<endl;
 
-//	cout << " reading LibraryFile" << endl;
-//	LibraryFile("LibraryFile.txt");
-//	cout << " done reading" << endl;
-//	for(auto it = CellTemplateTable.begin() ; it != CellTemplateTable.end(); ++it ){
-//		cout<<it->first<<" : "<<endl;
-//		it->second->print();
-//	}
+	cout << " reading LibraryFile" << endl;
+	LibraryFile("LibraryFile.txt");
+	cout << " done reading" << endl;
+
+	for(auto it = CellTemplateTable.begin() ; it != CellTemplateTable.end(); ++it ){
+		cout<<it->first<<" : "<<endl;
+		it->second->print();
+	}
 
 //	cout << " reading DesignConstraintsFile" << endl;
 //	DesignConstraintsFile("DesignConstraintsFile.txt");
