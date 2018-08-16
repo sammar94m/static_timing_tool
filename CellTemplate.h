@@ -47,6 +47,7 @@ public:
 			cout << it->first.first<<" , "<<it->first.second<<" : "<<endl;
 			it->second.print();
 		}
+
 		cout << "input_pin , output_pin -> slope " << endl;
 		for (auto it = slopeTable.begin(); it != slopeTable.end(); ++it) {
 			cout << it->first.first<<" , "<<it->first.second<<" : "<<endl;

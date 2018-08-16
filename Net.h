@@ -32,7 +32,7 @@ public:
 		receivers.push_front(new receiver(cell, pin_t));
 	}
 	void set_clkdat(clockdat& clk){
-		ClkArtime=clk;
+		//ClkArtime=clk;
 	}
 };
 
