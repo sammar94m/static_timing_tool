@@ -12,11 +12,15 @@ public:
 	int netDely;
 
 	receiver(Cell *cell, input_pin inPin, int slopeDeg = 0, int netDely = 0) :
-			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {}
+			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
+	}
 
-
+	void print() {
+		cout << "receiver:" << endl;
+		cout << "cell = " << cell->name << " ,inPin=" << inPin << " ,slopeDeg="
+				<< slopeDeg << " ,netDely=" << netDely << endl;
+	}
 };
-
 
 #endif
 

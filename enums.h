@@ -29,7 +29,7 @@ using namespace std;
 #define _RISE_ 1
 typedef vector<string> buffer;
 typedef int delay;
-typedef long int slope;
+typedef int slope; //long int
 typedef int margin;
 typedef int load;
 typedef std::string input_pin;

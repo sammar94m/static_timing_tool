@@ -6,8 +6,8 @@
 
 class CellTemplate {
 public:
-	map<pair<input_pin, output_pin>, Table<delay> > delayTable;
-	map<pair<input_pin, output_pin>, Table<slope> > slopeTable;
+	map<pair<input_pin, output_pin>, Table > delayTable;
+	map<pair<input_pin, output_pin>, Table > slopeTable;
 
 	map<pin, load> temp_pinLoadMap;
 	vector<int> IN_SLOPE_POINTS;
@@ -42,13 +42,13 @@ public:
 				++it) {
 			cout << it->first << " -> " << it->second << endl;
 		}
-		cout << "input_pin , output_pin -> delay " << endl;
+		cout << "delay table"<<endl<<"(input_pin , output_pin)-> delay " << endl;
 		for (auto it = delayTable.begin(); it != delayTable.end(); ++it) {
 			cout << it->first.first<<" , "<<it->first.second<<" : "<<endl;
 			it->second.print();
 		}
 
-		cout << "input_pin , output_pin -> slope " << endl;
+		cout << "slop table"<<endl<<"(input_pin , output_pin) -> slope " << endl;
 		for (auto it = slopeTable.begin(); it != slopeTable.end(); ++it) {
 			cout << it->first.first<<" , "<<it->first.second<<" : "<<endl;
 			it->second.print();

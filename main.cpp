@@ -45,10 +45,10 @@ Transitions getTransitions(string tr);
 const vector<string> splitString(const string& s, const char& c);
 
 template<typename T>
-void allocate_table(T** arr, int n, int m, const vector<string>& vec);
+T** create_table(int n, int m, const vector<string>& vec);
 
 template<typename T>
-void deallocate_table(T*** arr, int n);
+void decreate_table(T*** arr, int n);
 //bool endOfTemplate(ifstream& myfile);
 
 //void printNet(Net * net);
@@ -75,6 +75,8 @@ void LibraryFile(const string& filename) {
 
 	if (s == "Library file:") {
 		CellTemplate* cellTemplate = NULL;
+		pin PIN;
+		load LOAD;
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
 			for (int i = 0; i < vec.size(); i++)
@@ -84,8 +86,6 @@ void LibraryFile(const string& filename) {
 			if (vec.empty())
 				continue;
 
-			pin PIN;
-			load LOAD;
 			if (vec[0] == "CELL") {
 				cout << "CELL" << endl;
 				cellTemplate = new CellTemplate(vec[1]);
@@ -145,25 +145,36 @@ void LibraryFile(const string& filename) {
 					}
 
 					if (tableSpec[0] == "DELAY") {
-						allocate_table<delay>((delay**) (table), rows, cols,
+						table = (void**) create_table<delay>(rows, cols,
 								tablevec);
 					} else {
-						allocate_table<slope>((slope**) (table), rows, cols,
+						table = (void**) create_table<slope>(rows, cols,
 								tablevec);
 					}
 
-					MAXMIN AnlsType = tableSpec[2] == "MAX" ? MAX : MIN;
+					MAXMIN AnlsType;
+
+					if (tableSpec[2] == "MAX")
+						AnlsType = MAX;
+					else if (tableSpec[2] == "MIN")
+						AnlsType = MIN;
+					else throw("invalid AnlsType");
+
 					Transitions Tr = getTransitions(tableSpec[3]);
 
 					if (tableSpec[0] == "DELAY") {
+						cout << "delay table added" << endl;
 						cellTemplate->delayTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((delay**) table,
-								AnlsType, Tr);
+								AnlsType, Tr, rows, cols);
+						table = NULL;
 
 					} else {
+						cout << "slope table added" << endl;
 						cellTemplate->slopeTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((slope**) table,
-								AnlsType, Tr);
+								AnlsType, Tr, rows, cols);
+						table = NULL;
 
 					}
 					cout << "  good till now" << endl;
@@ -233,7 +244,7 @@ void DesignConstraintsFile(const string& filename) {
 
 						net->set_driver(dummycell, "dummy");
 
-						NetsTable.insert(pair<string, Net*>(name, net));
+						NetsTable[name] =  net;
 					} else {
 						net = new inputNet(name, isClk, LOW, HIGH, SL_RISE,
 								SL_FALL, AR_TIME);
@@ -244,7 +255,7 @@ void DesignConstraintsFile(const string& filename) {
 								pair<input_pin, Net*>("A", net));
 						net->add_receiver(dummycell, "dummy");
 						InputTable.push(dummycell);
-						NetsTable.insert(pair<string, Net*>(name, net));
+						NetsTable[name]= net;
 					}
 				}
 
@@ -389,68 +400,88 @@ void NetlistFileFormat(const string& filename) {
 //}
 int main(int argc, char* argv[]) {
 
-	cout << " reading LibraryFile" << endl;
-	LibraryFile("LibraryFile.txt");
-	cout << " LibraryFile done" << endl;
+//	cout << " reading LibraryFile" << endl;
+//	LibraryFile("LibraryFile.txt");
+//	cout << " LibraryFile done" << endl;
+//	cout
+//			<< "-----------------------------------------------------------------------"
+//			<< endl;
+//
+//	for (auto it = CellTemplateTable.begin(); it != CellTemplateTable.end();
+//			++it) {
+//		cout << it->first << " : " << endl;
+//		it->second->print();
+//	}
+
+	cout << " reading DesignConstraintsFile" << endl;
+	DesignConstraintsFile("DesignConstraintsFile.txt");
+	cout << "  DesignConstraintsFile done"<< endl;
 	cout << "-----------------------------------------------------------------------" << endl;
 
-	for(auto it = CellTemplateTable.begin() ; it != CellTemplateTable.end(); ++it ){
-		cout<<it->first<<" : "<<endl;
-		it->second->print();
-	}
-
-//	cout << " reading DesignConstraintsFile" << endl;
-//	DesignConstraintsFile("DesignConstraintsFile.txt");
-//	cout << "  DesignConstraintsFile done"<< endl;
+		for (auto it = NetsTable.begin(); it != NetsTable.end();++it) {
+			cout << it->first << " : " << endl;
+			it->second->print();
+		}
 
 //	cout << " reading NetlistFileFormat" << endl;
 //	NetlistFileFormat("NetlistFileFormat.txt");
 //	cout << " NetlistFileFormat done " << endl;
-
 
 	return 0;
 }
 
 //------------------------------------------------------------------------------------------
 
-int setupdataIndex(string s) { //e.g: s = MAX_RR
+int setupdataIndex(string s) { // bug
 	if (s == "MAX_RR")
-		return MAX_RR;
+		return FlopSetup::MAX_RR;
 	if (s == "MAX_FR")
-		return MAX_FR;
+		return FlopSetup::MAX_FR;
 	if (s == " MIN_RR")
-		return MIN_RR;
-	return MIN_FR;
+		return FlopSetup::MIN_RR;
+//	if (s == " MIN_FR")
+	else
+		return FlopSetup::MIN_FR;
+//	else throw("invslid FlopSetup")
 
 }
 
 Transitions getTransitions(string tr) {
-	if (tr == "FF")
-		return FF;
-	if (tr == "FR")
-		return FR;
-	if (tr == "RF")
-		return FR;
-	return RR;
+	cout<<"tr="<<tr<<endl;
+	if (tr == "FF"){
+		return Transitions::FF;
+	}else if (tr == "FR"){
+		return Transitions::FR;
+	}else if (tr == "RF"){
+		return Transitions::RF;
+	}else if( tr == "RR"){
+		return Transitions::RR;
+	}else throw("invalid Transition");
 }
 
 template<typename T>
-void allocate_table(T** arr, int rows, int cols, const vector<string>& vec) {
+T** create_table(int rows, int cols, const vector<string>& vec) {
 
 	T** matrix = new T*[rows];
 	for (int i = 0; i < rows; ++i)
 		matrix[i] = new T[cols];
 
-	arr = matrix;
-
+//	cout <<rows<<" x "<<cols<<endl;
 	for (int i = 0; i < vec.size(); i++) {
-		arr[i / rows][i % cols] = (T) stoi(vec[i], 0, 10);
+		if (vec[i] != "") {
+
+			//cout << "!!!   " << vec[i] << " to " << i / (rows - 1) << "  "
+			//	<< i % (cols - 1) << endl;
+
+			matrix[i / cols][i % cols] = atoi(vec[i].c_str()); // (T) stoi(vec[i], 0, 10);
+		}
 	}
 
+	return matrix;
 }
 
 template<typename T>
-void deallocate_table(T*** arr, int n) {
+void decreate_table(T*** arr, int n) {
 	for (int i = 0; i < n; i++)
 		free((*arr)[i]);
 	free(*arr);
@@ -493,7 +524,7 @@ vector<string> readLine(ifstream& myfile) {
 
 cellType string_to_cellType(string s) {
 	if (s == "FF")
-		return FlIPFlOP;
-	return COMB;
+		return cellType::FlIPFlOP;
+	return cellType::COMB;
 }
 

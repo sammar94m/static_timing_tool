@@ -34,6 +34,16 @@ public:
 	void set_clkdat(clockdat& clk){
 		//ClkArtime=clk;
 	}
+	virtual void print(){
+		cout <<"name="<<name<<" "<<"type="<<type<<" "<<"isClk="<<isClk<<endl;
+		cout<<"driver = { "<<driver.first->name <<" , "<<driver.second <<endl;
+		cout<<"receivers list:"<<endl;
+		for(auto iter = receivers.begin();iter!=receivers.end();++iter)
+			iter.operator *()->print();
+
+
+//		map<receiver*,clockdat> ClkArtime; //refrence clock rise
+	}
 };
 
 

@@ -3,41 +3,67 @@
 
 #include "enums.h"
 
-template<typename T>
+//template<typename T>
 class Table {
 private:
-	T** ptrMat[2][4];
+	int table_rows;
+	int table_cols;
+	int tables_num;
+	map<pair<MAXMIN, Transitions>, int**> _16tables;
+
 public:
 	Table() :
-			ptrMat { 0 } {
-	}
-	;
-	void AddTable(T** table, MAXMIN AnlsType, Transitions Tr) {
-		ptrMat[AnlsType][Tr] = table;
+			table_rows(-1), table_cols(-1), tables_num(0) {
 	}
 
-	int GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope, load outload) {
-		T** matrix = ptrMat[AnlsType][Tr];
-		if (!matrix)
-			return -1;
-		return matrix[inslope][outload];
-	}
+	void AddTable(int** table, MAXMIN AnlsType, Transitions Tr, int r, int c) {
+		if (table_rows < 0 || table_cols < 0) {
+			table_rows = r;
+			table_cols = c;
+		}
+		if (!table) {
+			cout << "null  at " << __func__ << endl;
+		} else {
+			_16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)] = table;
+			++tables_num;
 
-	~Table() {
-		for (int i = 0; i < 2; i++) {
-			for (int j = 0; j < 4; j++) {
-				if (ptrMat[i][j]) {
-					free(*(ptrMat[i][j])); //check this shit
-				}
-
-			}
+			//cout<< AnlsType<<" "<<Tr<<" num="<<tables_num<<endl;
 		}
 	}
-void print(){
-	cout<<"print the tables"<<endl<<endl;
-}
-};
 
+	int** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope,
+			load outload) {
+
+		return _16tables.find(pair<MAXMIN, Transitions>(AnlsType, Tr)).operator *().second;
+	}
+
+//	~Table() {
+//		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
+//			delete
+//		}
+//	}
+
+	void print() {
+		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
+			int** table = iter.operator *().second;
+			if (!table) {
+
+				cout << "-------------------shit no table " << endl << endl;
+
+			} else {
+				cout<< iter.operator *().first.first<<" " <<iter.operator *().first.second<<endl;
+
+				for (int r = 0; r < table_rows; r++) {
+					for (int c = 0; c < table_cols; c++) {
+						cout << table[r][c] << " | ";
+					}
+					cout << endl;
+				}
+			}
+		}
+		cout << "+++++++++++++++++++++++++++++++++++++" << endl;
+	}
+};
 
 #endif
 

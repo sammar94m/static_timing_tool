@@ -47,23 +47,24 @@ public:
 	string getName() {
 		return name;
 	}
-	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload) {
-		Table<delay>* table = &Template->delayTable[pair<input_pin, output_pin>(
-				in, out)];
-		return table->GetTable(AnlsType, Tr, inslope, outload);
+//	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
+//			Transitions Tr, slope inslope, load outload) {
+//		Table<delay>* table = &Template->delayTable[pair<input_pin, output_pin>(
+//				in, out)];
+//		return table->GetTable(AnlsType, Tr, inslope, outload);
+//
+//	}
+//	slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
+//			Transitions Tr, slope inslope, load outload) {
+//		Table<slope>* table = &Template->slopeTable[pair<input_pin, output_pin>(
+//				in, out)];
+//		return table->GetTable(AnlsType, Tr, inslope, outload);
+//	}
+//	bool PossiblTr(input_pin in, output_pin out, Transitions Tr){
+//		int Poss=this->Template->delayTable[make_pair(in,out)].GetTable(MAX,Tr,0,0);
+//		return Poss==-1 ? false : true;
+//	}
 
-	}
-	slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload) {
-		Table<slope>* table = &Template->slopeTable[pair<input_pin, output_pin>(
-				in, out)];
-		return table->GetTable(AnlsType, Tr, inslope, outload);
-	}
-	bool PossiblTr(input_pin in, output_pin out, Transitions Tr){
-		int Poss=this->Template->delayTable[make_pair(in,out)].GetTable(MAX,Tr,0,0);
-		return Poss==-1 ? false : true;
-	}
 	void updateWCdat(pin PIN, margin Margin, MAXMIN mode,
 			Transitions Tr/*FALL OR RISE*/){
 		if(WCmarg[mode].find(PIN)==WCmarg[mode].end()){
