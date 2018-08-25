@@ -1,0 +1,42 @@
+ reading DesignConstraintsFile
+
+
+ INPUT IN1
+ TYPE DATA
+ AR_TIME 25 AR CLK
+ SL_RISE 10
+ SL_FALL 8
+
+ INPUT IN2
+ TYPE DATA
+ AR_TIME 0 AR CLK
+ SL_RISE 15
+ SL_FALL 15
+
+ INPUT IN3
+ TYPE DATA
+ AR_TIME 13 AF CLK
+ SL_RISE 10
+ SL_FALL 12
+
+ INPUT CLK
+ TYPE CLOCK
+ AR_TIME 0 AR #
+ SL_RISE 5
+ SL_FALL 5
+ HIGH 100
+ LOW 100
+
+ OUTPUT OUT1
+ TYPE DATA
+ REQ_TIME 90 BR CLK
+ LOAD 20
+
+ OUTPUT OUT2
+ TYPE DATA
+ REQ_TIME 50 BR CLK
+ LOAD 10
+
+
+  DesignConstraintsFile done
+-----------------------------------------------------------------------

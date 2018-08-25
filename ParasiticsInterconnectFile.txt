@@ -1,0 +1,13 @@
+Parasitics interconnect file:
+
+NET: CLK
+SIMPLE_DESIGN%CLK -> INV1%A: 5, 5 
+
+(Each net for each driver->receiver pair has two numbers: delay and slope degradation)
+
+NET: CLK1
+INV1%O -> INV2%A: 3,4
+
+NET:IN1
+SIMPLE_DESIGN%IN1 -> NOR1%A: 10, 7
+SIMPLE_DESIGN%IN2-> FF1%D: 8,3
