@@ -90,7 +90,7 @@ margin dataPathDelayCalcAux(pin input, slope inslope, Cell* currCell, queue<Cell
 				delay netdelay = currNet->getRcvDelay((*(rcvCellIt))->cell, recieverpin); // calculate Net delay
 				delay nextstagedelay = netdelay + cumdelay + Celldelay;
 				margin rcvrmargin = dataPathDelayCalcAux(recieverpin, Netoutslope, (*(rcvCellIt))->cell,/*report,*/Cellqueue,
-						nextstagedelay, OutTr, MODE,SS.str()); // Move On
+						nextstagedelay, OutTr, MODE,SS.str(),Reftime); // Move On
 				currCell->updateWCdat(currCelloutPin, rcvrmargin, MODE, OutTr);
 				currCell->updateWCdat(input, rcvrmargin, MODE, inPossiTr);
 			}

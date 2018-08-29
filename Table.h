@@ -4,13 +4,13 @@
 #include "enums.h"
 
 //ASSUMPTION TABLE MIN SIZE IS 2x2
-//template<typename T>
+template<typename T>
 class Table {
 private:
 	int table_rows;
 	int table_cols;
 	int tables_num;
-	map<pair<MAXMIN, Transitions>, int**> _16tables;
+	map<pair<MAXMIN, Transitions>, T**> _16tables;
 
 public:
 	vector<slope>* IN_SLOPE_POINTS_PTR;
@@ -35,10 +35,14 @@ public:
 		}
 	}
 
-	int** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope,
+	T** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope,
 			load outload) {
 
 		return _16tables.find(pair<MAXMIN, Transitions>(AnlsType, Tr)).operator *().second;
+	}
+	T GetTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
+				load outload){
+		return _16tables.find(pair<MAXMIN, Transitions>(AnlsType, Tr))[inslope][outload];
 	}
 	T GetTableAV(MAXMIN AnlsType, Transitions Tr, unsigned int inslopeindex,
 			unsigned int outloadindex, bool exactld, bool exactSlp) {
@@ -85,7 +89,7 @@ public:
 		T ColDel = GetColDelta(AnlsType, Tr, ldind, inslopeindex -= -1);
 		slope yDel = inslope - IN_SLOPE_POINTS_PTR->operator [](slpind);
 		delay xDel = outload - OUT_LOAD_POINTS_PTR->operator [](ldind); //TODO: ADD EXACT/NONEXACT CASES
-		if ((inslopeindex -= -1 || inslopeindex -= 0)
+		if ((inslopeindex == -1 || inslopeindex == 0)
 				&& (outloadindex == -1 || outloadindex == 0)) { //two indexes outside
 			return GetTableVal(AnlsType, Tr, slpind, ldind) + xDel * RowDel
 					+ yDel * ColDel;

@@ -50,7 +50,7 @@ public:
 	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
 			Transitions Tr, slope inslope, load outload) {
 
-		return Template->getDelay(in,out,AnlsType,Tr,inslope,outload);^
+		return Template->getDelay(in,out,AnlsType,Tr,inslope,outload);
 	}
 	slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
 			Transitions Tr, slope inslope, load outload) {

@@ -6,8 +6,8 @@
 
 class CellTemplate {
 public:
-	map<pair<input_pin, output_pin>, Table> delayTable;
-	map<pair<input_pin, output_pin>, Table> slopeTable;
+	map<pair<input_pin, output_pin>, Table<delay>> delayTable;
+	map<pair<input_pin, output_pin>, Table<slope>> slopeTable;
 
 	map<pin, load> temp_pinLoadMap;
 	vector<slope> IN_SLOPE_POINTS;
