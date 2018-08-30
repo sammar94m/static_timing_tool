@@ -4,6 +4,7 @@
 #include "enums.h"
 #include "Cell.h"
 
+
 class FlipFlop: public Cell {
 public:
 	bool visited;
@@ -35,7 +36,7 @@ virtual ~FlipFlop(){};
 
 	}
 	int getClkAR(){
-		for(auto rcvIT=inMap["CLK"]->receivers.begin();rcvIT<inMap["CLK"]->receivers.end();++rcvIT){
+		for(auto rcvIT=inMap["CLK"]->receivers.begin(); rcvIT != inMap["CLK"]->receivers.end(); ++rcvIT){
 			if((rcvIT.operator *())->cell==this){
 				return inMap["CLK"]->ClkArtime[(rcvIT.operator *())].RISE_AR;
 			}

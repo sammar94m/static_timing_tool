@@ -418,10 +418,10 @@ int main(int argc, char* argv[]) {
 	cout << "  DesignConstraintsFile done"<< endl;
 	cout << "-----------------------------------------------------------------------" << endl;
 
-		for (auto it = NetsTable.begin(); it != NetsTable.end();++it) {
-			cout << it->first << " : " << endl;
-			it->second->print();
-		}
+//		for (auto it = NetsTable.begin(); it != NetsTable.end();++it) {
+//			cout << it->first << " : " << endl;
+//			it->second->print();
+//		}
 
 //	cout << " reading NetlistFileFormat" << endl;
 //	NetlistFileFormat("NetlistFileFormat.txt");

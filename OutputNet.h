@@ -14,7 +14,7 @@ public:
 			Net(name, OUTPUT, isClk, low, high), REQ_TIME(REQ_TIME), outload(
 					outload) {
 	};
-	virtual ~outputNet(){};
+	//virtual ~outputNet(){};
 };
 
 

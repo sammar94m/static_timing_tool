@@ -37,12 +37,11 @@ public:
 
 	T** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope,
 			load outload) {
-
-		return _16tables.find(pair<MAXMIN, Transitions>(AnlsType, Tr)).operator *().second;
+		return _16tables[pair<MAXMIN, Transitions>(AnlsType,Tr)];
 	}
 	T GetTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
 				load outload){
-		return _16tables.find(pair<MAXMIN, Transitions>(AnlsType, Tr))[inslope][outload];
+		return _16tables[pair<MAXMIN, Transitions>(AnlsType,Tr)][inslope][outload];
 	}
 	T GetTableAV(MAXMIN AnlsType, Transitions Tr, unsigned int inslopeindex,
 			unsigned int outloadindex, bool exactld, bool exactSlp) {

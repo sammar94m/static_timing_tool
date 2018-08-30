@@ -16,7 +16,7 @@ public:
 					SL_RISE), SL_FALL(SL_FALL) {
 	}
 	;
-	virtual ~inputNet(){};
+	//virtual ~inputNet(){};
 };
 
 

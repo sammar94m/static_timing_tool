@@ -2,7 +2,8 @@
 #define RECEIVER_H_
 
 #include "enums.h"
-#include "Cell.h"
+
+class Cell;
 
 class receiver {
 public:
@@ -15,11 +16,12 @@ public:
 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
 	}
 
-	void print() {
-		cout << "receiver:" << endl;
-		cout << "cell = " << cell->name << " ,inPin=" << inPin << " ,slopeDeg="
-				<< slopeDeg << " ,netDely=" << netDely << endl;
-	}
+//	void print() {
+//		cout << "receiver:" << endl;
+//		cout << "cell = " << cell->getName() << " ,inPin=" << inPin << " ,slopeDeg="
+//				<< slopeDeg << " ,netDely=" << netDely << endl;
+//	}
+
 };
 
 #endif
