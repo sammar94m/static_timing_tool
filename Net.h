@@ -25,7 +25,7 @@ public:
 	virtual ~Net(){}
 
 	delay getRcvDelay(Cell* rcv, pin rcvpin);
-	slope getRcvSlope(int drvSlope, Cell* rcv, pin rcvpin);
+	slope getRcvSlope(slope drvSlope, Cell* rcv, pin rcvpin);
 
 	void set_driver(Cell* cell, pin pin_t) {
 		driver = pair<Cell*, pin>(cell, pin_t);

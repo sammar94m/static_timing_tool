@@ -17,7 +17,12 @@ const map<output_pin, Net*>& Cell::getOutMap() {
 	return outMap;
 }
 load Cell::getCout(output_pin out){
-	return "";
+	load tmp=0;
+	Net* outNet=this->outMap[out];
+	for(auto RcvIT=outNet->receivers.begin();RcvIT!=outNet->receivers.end();RcvIT++){
+		tmp+=((*RcvIT)->cell)->getCin((*RcvIT)->inPin);
+	}
+	return tmp;
 }
 
 string Cell::getName() {

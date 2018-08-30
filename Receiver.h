@@ -9,8 +9,8 @@ class receiver {
 public:
 	Cell* cell;
 	input_pin inPin;
-	int slopeDeg;
-	int netDely;
+	slope slopeDeg;
+	delay netDely;
 
 	receiver(Cell *cell, input_pin inPin, int slopeDeg = 0, int netDely = 0) :
 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {

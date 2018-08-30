@@ -8,8 +8,22 @@
 #include "Cell.h"
 
 
-delay Net::getRcvDelay(Cell* rcv, pin rcvpin);
-slope Net::getRcvSlope(int drvSlope, Cell* rcv, pin rcvpin);
+delay Net::getRcvDelay(Cell* rcv, pin rcvpin){
+	for(auto RcvIT=this->receivers.begin();RcvIT!=this->receivers.end();RcvIT++){
+		if((*RcvIT)->cell==rcv && (*RcvIT)->inPin==rcvpin){
+			return (*RcvIT)->netDely;
+		}
+	}
+	return -1;
+}
+slope Net::getRcvSlope(slope drvSlope, Cell* rcv, pin rcvpin){
+	for(auto RcvIT=this->receivers.begin();RcvIT!=this->receivers.end();RcvIT++){
+		if((*RcvIT)->cell==rcv && (*RcvIT)->inPin==rcvpin){
+			return sqrt((*RcvIT)->slopeDeg*(*RcvIT)->slopeDeg+drvSlope*drvSlope);
+		}
+	}
+	return -1;
+}
 void Net::set_driver(Cell* cell, pin pin_t) {
 	driver = pair<Cell*, pin>(cell, pin_t);
 }
