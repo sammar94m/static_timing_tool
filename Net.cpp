@@ -33,6 +33,7 @@ void Net::add_receiver(Cell* cell, pin pin_t) {
 void Net::set_clkdat(clockdat& clk) {
 	//ClkArtime=clk;
 }
+
 //virtual void Net::print() {
 //	cout << "name=" << name << " " << "type=" << type << " " << "isClk="
 //			<< isClk << endl;

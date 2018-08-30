@@ -33,9 +33,8 @@ public:
 	void add_receiver(Cell* cell, pin pin_t) {
 		receivers.push_front(new receiver(cell, pin_t));
 	}
-	void set_clkdat(clockdat& clk){
-		//ClkArtime=clk;
-	}
+	void set_clkdat(clockdat& clk);
+
 	//virtual void print();
 };
 

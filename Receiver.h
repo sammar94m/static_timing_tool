@@ -3,7 +3,6 @@
 
 #include "enums.h"
 
-class Cell;
 
 class receiver {
 public:
@@ -16,11 +15,10 @@ public:
 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
 	}
 
-//	void print() {
-//		cout << "receiver:" << endl;
-//		cout << "cell = " << cell->getName() << " ,inPin=" << inPin << " ,slopeDeg="
-//				<< slopeDeg << " ,netDely=" << netDely << endl;
-//	}
+	void set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly ,slope s_deg
+			);
+
+//	void print();
 
 };
 

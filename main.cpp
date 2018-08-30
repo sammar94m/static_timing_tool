@@ -158,7 +158,8 @@ void LibraryFile(const string& filename) {
 						AnlsType = MAX;
 					else if (tableSpec[2] == "MIN")
 						AnlsType = MIN;
-					else throw("invalid AnlsType");
+					else
+						throw("invalid AnlsType");
 
 					Transitions Tr = getTransitions(tableSpec[3]);
 
@@ -244,7 +245,7 @@ void DesignConstraintsFile(const string& filename) {
 
 						net->set_driver(dummycell, "dummy");
 
-						NetsTable[name] =  net;
+						NetsTable[name] = net;
 					} else {
 						net = new inputNet(name, isClk, LOW, HIGH, SL_RISE,
 								SL_FALL, AR_TIME);
@@ -255,7 +256,7 @@ void DesignConstraintsFile(const string& filename) {
 								pair<input_pin, Net*>("A", net));
 						net->add_receiver(dummycell, "dummy");
 						InputTable.push(dummycell);
-						NetsTable[name]= net;
+						NetsTable[name] = net;
 					}
 				}
 
@@ -361,6 +362,54 @@ void NetlistFileFormat(const string& filename) {
 	}
 }
 
+//-------------------------------------------------------------------------------------------------------------------------
+
+void ParasiticsInterconnectFile(const string& filename) {
+	ifstream myfile;
+	myfile.open(filename.c_str());
+	if (!myfile.is_open()) {
+		cout << "file was not opened" << endl;
+		return;
+	}
+
+	string s;
+	getline(myfile, s, '\r');
+
+	Net* net = NULL;
+
+	if (s == "Parasitics interconnect file:") {
+		while (!myfile.eof()) {
+			vector<string> vec = readLine(myfile);
+			for (int i = 0; i < vec.size(); i++)
+				cout << " " << vec[i];
+			cout << endl;
+			if (vec.empty()) {
+				net = NULL;
+				continue;
+			}
+
+			if (vec[0] == "NET") {
+				net = NetsTable[vec[2]];
+				if (!net) {
+					cout << "net " << vec[2] << " not found in NetsTable"
+							<< endl;
+				}
+			} else if (net) {
+				if (net->driver.first->name == vec[0] && net->name == vec[1]) {
+					for (auto itr = net->receivers.begin();
+							itr != net->receivers.end(); ++itr) {
+
+						(*itr)->set_slopeDeg_netDely(vec[2], vec[3],
+								atoi(vec[4].c_str()), atoi(vec[5].c_str()));
+					}
+				}
+
+			}
+
+		}
+	}
+}
+
 /* files:
  *  *		LibraryFile.txt
  *		NetlistFileFormat.txt
@@ -415,8 +464,10 @@ int main(int argc, char* argv[]) {
 
 	cout << " reading DesignConstraintsFile" << endl;
 	DesignConstraintsFile("DesignConstraintsFile.txt");
-	cout << "  DesignConstraintsFile done"<< endl;
-	cout << "-----------------------------------------------------------------------" << endl;
+	cout << "  DesignConstraintsFile done" << endl;
+	cout
+			<< "-----------------------------------------------------------------------"
+			<< endl;
 
 //		for (auto it = NetsTable.begin(); it != NetsTable.end();++it) {
 //			cout << it->first << " : " << endl;
@@ -447,16 +498,17 @@ int setupdataIndex(string s) { // bug
 }
 
 Transitions getTransitions(string tr) {
-	cout<<"tr="<<tr<<endl;
-	if (tr == "FF"){
+	cout << "tr=" << tr << endl;
+	if (tr == "FF") {
 		return Transitions::FF;
-	}else if (tr == "FR"){
+	} else if (tr == "FR") {
 		return Transitions::FR;
-	}else if (tr == "RF"){
+	} else if (tr == "RF") {
 		return Transitions::RF;
-	}else if( tr == "RR"){
+	} else if (tr == "RR") {
 		return Transitions::RR;
-	}else throw("invalid Transition");
+	} else
+		throw("invalid Transition");
 }
 
 template<typename T>
@@ -473,7 +525,7 @@ T** create_table(int rows, int cols, const vector<string>& vec) {
 			//cout << "!!!   " << vec[i] << " to " << i / (rows - 1) << "  "
 			//	<< i % (cols - 1) << endl;
 
-			matrix[i / cols][i % cols] = atoi(vec[i].c_str()); // (T) stoi(vec[i], 0, 10);
+			matrix[i / cols][i % cols] = atoi(vec[i].c_str());// (T) stoi(vec[i], 0, 10);
 		}
 	}
 
@@ -508,7 +560,7 @@ void decreate_table(T*** arr, int n) {
 //	}
 //}
 
-vector<string> readLine(ifstream& myfile) {
+vector<string> readLine(ifstream & myfile) {
 	vector<string> vec, goodvec;
 	string line;
 	getline(myfile, line);
