@@ -27,6 +27,7 @@ slope Net::getRcvSlope(slope drvSlope, Cell* rcv, pin rcvpin){
 void Net::set_driver(Cell* cell, pin pin_t) {
 	driver = pair<Cell*, pin>(cell, pin_t);
 }
+
 void Net::add_receiver(Cell* cell, pin pin_t) {
 	receivers.push_front(new receiver(cell, pin_t));
 }

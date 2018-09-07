@@ -11,22 +11,7 @@
 #include "Clockdat.h"
 
 using namespace std;
-load Cell::getCout(output_pin out) {
-	load Cout = 0;
-	if (this->pinLoadMap.find(out) != this->pinLoadMap.end()) { // result is cached
-		return this->pinLoadMap[out];
-	} else {
-		Net* rcvr=this->outMap[out];
-			for (auto RcvIT = rcvr->receivers.begin(); RcvIT != rcvr->receivers.end(); ++RcvIT) {
-				input_pin A = (*(RcvIT))->inPin;
-				Cell* tmp = (*(RcvIT))->cell; // TODO:add output pin load
-				Cout += tmp->getCin(A);
-			}
-		Cout += (this->Template->temp_pinLoadMap)[out];
-		return Cout;
-	}
 
-}
 
 string to_string(Transitions TR){
 	if(TR==FALL){

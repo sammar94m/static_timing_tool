@@ -1,22 +1,642 @@
-From f0f3b145cc88f627d6991a8fbfce79b7a998aa4f Mon Sep 17 00:00:00 2001
+From a3020b92d3834e4c2b2ee3081073705b74c1ad9c Mon Sep 17 00:00:00 2001
 From: root <root@DESKTOP-U4IJVD5.localdomain>
 Date: Thu, 30 Aug 2018 18:32:10 +0300
 Subject: [PATCH] reads Parasitics interconnect file
 
 ---
- Receiver.h |  8 +++++++
- main.cpp   | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 73 insertions(+), 13 deletions(-)
+ .settings/language.settings.xml               |   4 +-
+ 0001-reads-Parasitics-interconnect-file.patch | 174 ++++++++++++++++++++++++++
+ CellTemplate.cpp                              |  99 +++++++++++++++
+ CellTemplate.h                                |  95 +-------------
+ Clockdat.cpp                                  |  10 ++
+ Flipflop.h                                    |  27 +---
+ InputNet.cpp                                  |  10 ++
+ Net.cpp                                       |   1 +
+ Net.h                                         |   5 +-
+ OutputNet.h                                   |   1 +
+ Pin.cpp                                       |  23 ++++
+ Pin.h                                         |  15 +--
+ Receiver.cpp                                  |  23 ++++
+ Receiver.h                                    |  10 +-
+ Table.cpp                                     | 161 ++++++++++++++++++++++++
+ Table.h                                       | 149 +++-------------------
+ main.cpp                                      |  78 ++++++++++--
+ 17 files changed, 604 insertions(+), 281 deletions(-)
+ create mode 100644 0001-reads-Parasitics-interconnect-file.patch
+ create mode 100644 CellTemplate.cpp
+ create mode 100644 Clockdat.cpp
+ create mode 100644 InputNet.cpp
+ create mode 100644 Pin.cpp
+ create mode 100644 Receiver.cpp
+ create mode 100644 Table.cpp
 
-diff --git a/Receiver.h b/Receiver.h
-index 0529ecb..f99d281 100644
---- a/Receiver.h
-+++ b/Receiver.h
-@@ -16,6 +16,14 @@ public:
- 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
+diff --git a/.settings/language.settings.xml b/.settings/language.settings.xml
+index 5e9d47a..cfa11dd 100644
+--- a/.settings/language.settings.xml
++++ b/.settings/language.settings.xml
+@@ -5,7 +5,7 @@
+ 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
+ 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
+ 			<provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
+-			<provider class="org.eclipse.cdt.managedbuilder.internal.language.settings.providers.GCCBuiltinSpecsDetectorMinGW" console="false" env-hash="-1211144692169100208" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetectorMinGW" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings MinGW" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;" prefer-non-shared="true">
++			<provider class="org.eclipse.cdt.managedbuilder.internal.language.settings.providers.GCCBuiltinSpecsDetectorMinGW" console="false" env-hash="1650257509270390081" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetectorMinGW" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings MinGW" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;" prefer-non-shared="true">
+ 				<language-scope id="org.eclipse.cdt.core.gcc"/>
+ 				<language-scope id="org.eclipse.cdt.core.g++"/>
+ 			</provider>
+@@ -16,7 +16,7 @@
+ 			<provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
+ 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
+ 			<provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
+-			<provider class="org.eclipse.cdt.managedbuilder.internal.language.settings.providers.GCCBuiltinSpecsDetectorMinGW" console="false" env-hash="-1211144692169100208" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetectorMinGW" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings MinGW" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;" prefer-non-shared="true">
++			<provider class="org.eclipse.cdt.managedbuilder.internal.language.settings.providers.GCCBuiltinSpecsDetectorMinGW" console="false" env-hash="1650257509270390081" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetectorMinGW" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings MinGW" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;" prefer-non-shared="true">
+ 				<language-scope id="org.eclipse.cdt.core.gcc"/>
+ 				<language-scope id="org.eclipse.cdt.core.g++"/>
+ 			</provider>
+diff --git a/0001-reads-Parasitics-interconnect-file.patch b/0001-reads-Parasitics-interconnect-file.patch
+new file mode 100644
+index 0000000..c6fc22c
+--- /dev/null
++++ b/0001-reads-Parasitics-interconnect-file.patch
+@@ -0,0 +1,174 @@
++From f0f3b145cc88f627d6991a8fbfce79b7a998aa4f Mon Sep 17 00:00:00 2001
++From: root <root@DESKTOP-U4IJVD5.localdomain>
++Date: Thu, 30 Aug 2018 18:32:10 +0300
++Subject: [PATCH] reads Parasitics interconnect file
++
++---
++ Receiver.h |  8 +++++++
++ main.cpp   | 78 +++++++++++++++++++++++++++++++++++++++++++++++++++-----------
++ 2 files changed, 73 insertions(+), 13 deletions(-)
++
++diff --git a/Receiver.h b/Receiver.h
++index 0529ecb..f99d281 100644
++--- a/Receiver.h
+++++ b/Receiver.h
++@@ -16,6 +16,14 @@ public:
++ 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
++ 	}
++ 
+++	void set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly ,slope s_deg
+++			) {
+++		if(cell && cell->name == cellName && inPin == pin ){
+++			slopeDeg = s_deg;
+++			netDely = n_dly;
+++		}
+++	}
+++
++ //	void print() {
++ //		cout << "receiver:" << endl;
++ //		cout << "cell = " << cell->getName() << " ,inPin=" << inPin << " ,slopeDeg="
++diff --git a/main.cpp b/main.cpp
++index d7c885b..39356eb 100644
++--- a/main.cpp
+++++ b/main.cpp
++@@ -158,7 +158,8 @@ void LibraryFile(const string& filename) {
++ 						AnlsType = MAX;
++ 					else if (tableSpec[2] == "MIN")
++ 						AnlsType = MIN;
++-					else throw("invalid AnlsType");
+++					else
+++						throw("invalid AnlsType");
++ 
++ 					Transitions Tr = getTransitions(tableSpec[3]);
++ 
++@@ -244,7 +245,7 @@ void DesignConstraintsFile(const string& filename) {
++ 
++ 						net->set_driver(dummycell, "dummy");
++ 
++-						NetsTable[name] =  net;
+++						NetsTable[name] = net;
++ 					} else {
++ 						net = new inputNet(name, isClk, LOW, HIGH, SL_RISE,
++ 								SL_FALL, AR_TIME);
++@@ -255,7 +256,7 @@ void DesignConstraintsFile(const string& filename) {
++ 								pair<input_pin, Net*>("A", net));
++ 						net->add_receiver(dummycell, "dummy");
++ 						InputTable.push(dummycell);
++-						NetsTable[name]= net;
+++						NetsTable[name] = net;
++ 					}
++ 				}
++ 
++@@ -361,6 +362,54 @@ void NetlistFileFormat(const string& filename) {
++ 	}
++ }
++ 
+++//-------------------------------------------------------------------------------------------------------------------------
+++
+++void ParasiticsInterconnectFile(const string& filename) {
+++	ifstream myfile;
+++	myfile.open(filename.c_str());
+++	if (!myfile.is_open()) {
+++		cout << "file was not opened" << endl;
+++		return;
+++	}
+++
+++	string s;
+++	getline(myfile, s, '\r');
+++
+++	Net* net = NULL;
+++
+++	if (s == "Parasitics interconnect file:") {
+++		while (!myfile.eof()) {
+++			vector<string> vec = readLine(myfile);
+++			for (int i = 0; i < vec.size(); i++)
+++				cout << " " << vec[i];
+++			cout << endl;
+++			if (vec.empty()) {
+++				net = NULL;
+++				continue;
+++			}
+++
+++			if (vec[0] == "NET") {
+++				net = NetsTable[vec[2]];
+++				if (!net) {
+++					cout << "net " << vec[2] << " not found in NetsTable"
+++							<< endl;
+++				}
+++			} else if (net) {
+++				if (net->driver.first->name == vec[0] && net->name == vec[1]) {
+++					for (auto itr = net->receivers.begin();
+++							itr != net->receivers.end(); ++itr) {
+++
+++						(*itr)->set_slopeDeg_netDely(vec[2], vec[3],
+++								atoi(vec[4].c_str()), atoi(vec[5].c_str()));
+++					}
+++				}
+++
+++			}
+++
+++		}
+++	}
+++}
+++
++ /* files:
++  *  *		LibraryFile.txt
++  *		NetlistFileFormat.txt
++@@ -415,8 +464,10 @@ int main(int argc, char* argv[]) {
++ 
++ 	cout << " reading DesignConstraintsFile" << endl;
++ 	DesignConstraintsFile("DesignConstraintsFile.txt");
++-	cout << "  DesignConstraintsFile done"<< endl;
++-	cout << "-----------------------------------------------------------------------" << endl;
+++	cout << "  DesignConstraintsFile done" << endl;
+++	cout
+++			<< "-----------------------------------------------------------------------"
+++			<< endl;
++ 
++ //		for (auto it = NetsTable.begin(); it != NetsTable.end();++it) {
++ //			cout << it->first << " : " << endl;
++@@ -447,16 +498,17 @@ int setupdataIndex(string s) { // bug
++ }
++ 
++ Transitions getTransitions(string tr) {
++-	cout<<"tr="<<tr<<endl;
++-	if (tr == "FF"){
+++	cout << "tr=" << tr << endl;
+++	if (tr == "FF") {
++ 		return Transitions::FF;
++-	}else if (tr == "FR"){
+++	} else if (tr == "FR") {
++ 		return Transitions::FR;
++-	}else if (tr == "RF"){
+++	} else if (tr == "RF") {
++ 		return Transitions::RF;
++-	}else if( tr == "RR"){
+++	} else if (tr == "RR") {
++ 		return Transitions::RR;
++-	}else throw("invalid Transition");
+++	} else
+++		throw("invalid Transition");
++ }
++ 
++ template<typename T>
++@@ -473,7 +525,7 @@ T** create_table(int rows, int cols, const vector<string>& vec) {
++ 			//cout << "!!!   " << vec[i] << " to " << i / (rows - 1) << "  "
++ 			//	<< i % (cols - 1) << endl;
++ 
++-			matrix[i / cols][i % cols] = atoi(vec[i].c_str()); // (T) stoi(vec[i], 0, 10);
+++			matrix[i / cols][i % cols] = atoi(vec[i].c_str());// (T) stoi(vec[i], 0, 10);
++ 		}
++ 	}
++ 
++@@ -508,7 +560,7 @@ void decreate_table(T*** arr, int n) {
++ //	}
++ //}
++ 
++-vector<string> readLine(ifstream& myfile) {
+++vector<string> readLine(ifstream & myfile) {
++ 	vector<string> vec, goodvec;
++ 	string line;
++ 	getline(myfile, line);
++-- 
++1.9.1
++
+diff --git a/CellTemplate.cpp b/CellTemplate.cpp
+new file mode 100644
+index 0000000..4811c4e
+--- /dev/null
++++ b/CellTemplate.cpp
+@@ -0,0 +1,99 @@
++/*
++ * CellTemplate.cpp
++ *
++ *  Created on: Sep 7, 2018
++ *      Author: Sammar
++ */
++#include "CellTemplate.h"
++
++delay CellTemplate::getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
++		Transitions Tr, slope inslope, load outload) {
++	int indslp, indld;
++	bool exactslp, exactld;
++	indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);
++	indld = getClosestindex(OUT_LOAD_POINTS, outload, exactld);
++	if (withinboundry(indslp, exactslp) && withinboundry(indld, exactld)) { //WITHIN TABLE BOUNDRIES
++		return delayTable[pair<input_pin, output_pin>(in, out)].GetTableAV(
++				AnlsType, Tr, indslp, indld, exactld, exactslp);
++	} else { //OUTSIDE TABLE BOUNDRIES
++		return delayTable[pair<input_pin, output_pin>(in, out)].GetExtTableVal(
++				AnlsType, Tr, inslope, outload, indslp, indld, exactld,
++				exactslp);
++	}
++	return -1;
++}
++delay CellTemplate::getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
++		Transitions Tr, slope inslope, load outload) {
++	int indslp, indld;
++	bool exactslp, exactld;
++	indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);
++	indld = getClosestindex(OUT_LOAD_POINTS, outload, exactld);
++	if (withinboundry(indslp, exactslp) && withinboundry(indld, exactld)) { //WITHIN TABLE BOUNDRIES
++		return slopeTable[pair<input_pin, output_pin>(in, out)].GetTableAV(
++				AnlsType, Tr, indslp, indld, exactld, exactslp);
++	} else { //OUTSIDE TABLE BOUNDRIES
++		return slopeTable[pair<input_pin, output_pin>(in, out)].GetExtTableVal(
++				AnlsType, Tr, inslope, outload, indslp, indld, exactld,
++				exactslp);
++
++	}
++	return -1;
++}
++bool CellTemplate::withinboundry(int ida, bool exacta) {
++	if (ida == 0 && exacta == false) {
++		return false;
++	} else if (ida == -1) {
++		return false;
++	} else {
++		return true;
++	}
++}
++template<typename T>
++int CellTemplate::getClosestindex(vector<T>& vec, int val, bool& exact) {
++	for (int i = 0; i < vec.size(); i++) {
++		if (vec[i] == val) {
++			exact = true;
++			return i;
++		} else if (vec[i] > val) {
++			exact = false;
++			return i;
++		}
++	}
++	exact = false;
++	return -1;
++}
++
++void CellTemplate::print() {
++	cout << "name: " << template_name << endl;
++	cout << "setupdata: " << setupdata[0] << " " << setupdata[1] << " "
++			<< setupdata[2] << " " << setupdata[3] << endl;
++	cout << "IN_SLOPE_POINTS: ";
++	for (int i = 0; i < (int) IN_SLOPE_POINTS.size(); i++) {
++		cout << IN_SLOPE_POINTS[i] << " ";
++	}
++	cout << endl;
++	cout << "OUT_LOAD_POINTS: ";
++	for (int i = 0; i < (int) OUT_LOAD_POINTS.size(); i++) {
++		cout << OUT_LOAD_POINTS[i] << " ";
++	}
++	cout << endl;
++	cout << "pin->Load Map: " << endl;
++	for (auto it = temp_pinLoadMap.begin(); it != temp_pinLoadMap.end(); ++it) {
++		cout << it->first << " -> " << it->second << endl;
++	}
++	cout << "delay table" << endl << "(input_pin , output_pin)-> delay "
++			<< endl;
++	for (auto it = delayTable.begin(); it != delayTable.end(); ++it) {
++		cout << it->first.first << " , " << it->first.second << " : " << endl;
++		it->second.print();
++	}
++
++	cout << "slop table" << endl << "(input_pin , output_pin) -> slope "
++			<< endl;
++	for (auto it = slopeTable.begin(); it != slopeTable.end(); ++it) {
++		cout << it->first.first << " , " << it->first.second << " : " << endl;
++		it->second.print();
++	}
++
++}
++
+diff --git a/CellTemplate.h b/CellTemplate.h
+index 92a278f..fba6f37 100644
+--- a/CellTemplate.h
++++ b/CellTemplate.h
+@@ -24,99 +24,16 @@ public:
  	}
+ 	virtual ~CellTemplate() {
+ 	}
++
+ 	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
+-			Transitions Tr, slope inslope, load outload) {
+-		int indslp, indld;
+-		bool exactslp, exactld;
+-		indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);
+-		indld = getClosestindex(OUT_LOAD_POINTS, outload, exactld);
+-		if (withinboundry(indslp, exactslp) && withinboundry(indld, exactld)) { //WITHIN TABLE BOUNDRIES
+-			return delayTable[pair<input_pin, output_pin>(in, out)].GetTableAV(
+-					AnlsType, Tr, indslp, indld, exactld, exactslp);
+-		} else { //OUTSIDE TABLE BOUNDRIES
+-			return delayTable[pair<input_pin, output_pin>(in, out)].GetExtTableVal(
+-					AnlsType, Tr, inslope, outload, indslp, indld, exactld,
+-					exactslp);
+-		}
+-		return -1;
+-	}
++			Transitions Tr, slope inslope, load outload) ;
+ 	delay getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
+-			Transitions Tr, slope inslope, load outload) {
+-		int indslp, indld;
+-		bool exactslp, exactld;
+-		indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);
+-		indld = getClosestindex(OUT_LOAD_POINTS, outload, exactld);
+-		if (withinboundry(indslp, exactslp) && withinboundry(indld, exactld)) { //WITHIN TABLE BOUNDRIES
+-			return slopeTable[pair<input_pin, output_pin>(in, out)].GetTableAV(
+-					AnlsType, Tr, indslp, indld, exactld, exactslp);
+-		} else { //OUTSIDE TABLE BOUNDRIES
+-			return slopeTable[pair<input_pin, output_pin>(in, out)].GetExtTableVal(
+-					AnlsType, Tr, inslope, outload, indslp, indld, exactld,
+-					exactslp);
+-
+-		}
+-		return -1;
+-	}
+-	bool withinboundry(int ida, bool exacta) {
+-		if (ida == 0 && exacta == false) {
+-			return false;
+-		} else if (ida == -1) {
+-			return false;
+-		} else {
+-			return true;
+-		}
+-	}
++			Transitions Tr, slope inslope, load outload) ;
++	bool withinboundry(int ida, bool exacta);
+ 	template<typename T>
+-	int getClosestindex(vector<T>& vec, int val, bool& exact) {
+-		for (int i = 0; i < vec.size(); i++) {
+-			if (vec[i] == val) {
+-				exact = true;
+-				return i;
+-			} else if (vec[i] > val) {
+-				exact = false;
+-				return i;
+-			}
+-		}
+-		exact = false;
+-		return -1;
+-	}
++	int getClosestindex(vector<T>& vec, int val, bool& exact);
  
-+	void set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly ,slope s_deg
+-	void print() {
+-		cout << "name: " << template_name << endl;
+-		cout << "setupdata: " << setupdata[0] << " " << setupdata[1] << " "
+-				<< setupdata[2] << " " << setupdata[3] << endl;
+-		cout << "IN_SLOPE_POINTS: ";
+-		for (int i = 0; i < (int) IN_SLOPE_POINTS.size(); i++) {
+-			cout << IN_SLOPE_POINTS[i] << " ";
+-		}
+-		cout << endl;
+-		cout << "OUT_LOAD_POINTS: ";
+-		for (int i = 0; i < (int) OUT_LOAD_POINTS.size(); i++) {
+-			cout << OUT_LOAD_POINTS[i] << " ";
+-		}
+-		cout << endl;
+-		cout << "pin->Load Map: " << endl;
+-		for (auto it = temp_pinLoadMap.begin(); it != temp_pinLoadMap.end();
+-				++it) {
+-			cout << it->first << " -> " << it->second << endl;
+-		}
+-		cout << "delay table" << endl << "(input_pin , output_pin)-> delay "
+-				<< endl;
+-		for (auto it = delayTable.begin(); it != delayTable.end(); ++it) {
+-			cout << it->first.first << " , " << it->first.second << " : "
+-					<< endl;
+-			it->second.print();
+-		}
+-
+-		cout << "slop table" << endl << "(input_pin , output_pin) -> slope "
+-				<< endl;
+-		for (auto it = slopeTable.begin(); it != slopeTable.end(); ++it) {
+-			cout << it->first.first << " , " << it->first.second << " : "
+-					<< endl;
+-			it->second.print();
+-		}
+-
+-	}
++	void print();
+ };
+ 
+ #endif
+diff --git a/Clockdat.cpp b/Clockdat.cpp
+new file mode 100644
+index 0000000..008b97f
+--- /dev/null
++++ b/Clockdat.cpp
+@@ -0,0 +1,10 @@
++/*
++ * Clockdat.cpp
++ *
++ *  Created on: Sep 7, 2018
++ *      Author: Sammar
++ */
++
++
++
++
+diff --git a/Flipflop.h b/Flipflop.h
+index b031e70..9c91a8e 100644
+--- a/Flipflop.h
++++ b/Flipflop.h
+@@ -19,30 +19,13 @@ public:
+ virtual ~FlipFlop(){};
+ 
+ 
+-	void setSetup(MAXMIN AnlsType, Transitions Tr, int val) {
+-	setup[2 * AnlsType + Tr] = val;
+-	}
+-
+-	int getSetup(MAXMIN AnlsType, Transitions Tr) {
+-		return setup[2 * AnlsType + Tr];
++	void setSetup(MAXMIN AnlsType, Transitions Tr, int val) ;
+ 
+-	}
+-	void setHold(MAXMIN AnlsType, Transitions Tr, int val) {
+-	setup[2 * AnlsType + Tr] = val;
+-	}
++	int getSetup(MAXMIN AnlsType, Transitions Tr);
++	void setHold(MAXMIN AnlsType, Transitions Tr, int val) ;
+ 
+-	int getHold(MAXMIN AnlsType, Transitions Tr) {
+-		return setup[2 * AnlsType + Tr];
+-
+-	}
+-	int getClkAR(){
+-		for(auto rcvIT=inMap["CLK"]->receivers.begin(); rcvIT != inMap["CLK"]->receivers.end(); ++rcvIT){
+-			if((rcvIT.operator *())->cell==this){
+-				return inMap["CLK"]->ClkArtime[(rcvIT.operator *())].RISE_AR;
+-			}
+-		}
+-		return -1;
+-	}
++	int getHold(MAXMIN AnlsType, Transitions Tr);
++	int getClkAR();
+ 
+ 
+ };
+diff --git a/InputNet.cpp b/InputNet.cpp
+new file mode 100644
+index 0000000..2365446
+--- /dev/null
++++ b/InputNet.cpp
+@@ -0,0 +1,10 @@
++/*
++ * InputNet.cpp
++ *
++ *  Created on: Sep 7, 2018
++ *      Author: Sammar
++ */
++
++
++
++
+diff --git a/Net.cpp b/Net.cpp
+index 01f0b33..d3c743e 100644
+--- a/Net.cpp
++++ b/Net.cpp
+@@ -33,6 +33,7 @@ void Net::add_receiver(Cell* cell, pin pin_t) {
+ void Net::set_clkdat(clockdat& clk) {
+ 	//ClkArtime=clk;
+ }
++
+ //virtual void Net::print() {
+ //	cout << "name=" << name << " " << "type=" << type << " " << "isClk="
+ //			<< isClk << endl;
+diff --git a/Net.h b/Net.h
+index d04b805..d5dcd9e 100644
+--- a/Net.h
++++ b/Net.h
+@@ -33,9 +33,8 @@ public:
+ 	void add_receiver(Cell* cell, pin pin_t) {
+ 		receivers.push_front(new receiver(cell, pin_t));
+ 	}
+-	void set_clkdat(clockdat& clk){
+-		//ClkArtime=clk;
+-	}
++	void set_clkdat(clockdat& clk);
++
+ 	//virtual void print();
+ };
+ 
+diff --git a/OutputNet.h b/OutputNet.h
+index d34da7d..bf7bf94 100644
+--- a/OutputNet.h
++++ b/OutputNet.h
+@@ -14,6 +14,7 @@ public:
+ 			Net(name, OUTPUT, isClk, low, high), REQ_TIME(REQ_TIME), outload(
+ 					outload) {
+ 	};
++
+ 	//virtual ~outputNet(){};
+ };
+ 
+diff --git a/Pin.cpp b/Pin.cpp
+new file mode 100644
+index 0000000..62215a9
+--- /dev/null
++++ b/Pin.cpp
+@@ -0,0 +1,23 @@
++/*
++ * Pin.cpp
++ *
++ *  Created on: Sep 7, 2018
++ *      Author: Sammar
++ */
++#include "Net.h"
++#include "Pin.h"
++
++	void Pin::updateWC(margin MAR, slope SLOP, Transitions Tr /* Fall or Rise */) {
++		if (Tr == FALL) {
++			WCMarF = WCMarF < MAR ? WCMarF : MAR;
++			WCSlopeF = WCSlopeF > SLOP ? WCSlopeF : SLOP;
++			validF = true;
++		} else {
++			WCMarR = WCMarR < MAR ? WCMarR : MAR;
++			WCSlopeR = WCSlopeR > SLOP ? WCSlopeR : SLOP;
++			validR = true;
++		}
++	}
++
++
++
+diff --git a/Pin.h b/Pin.h
+index 9519ee3..cdb9778 100644
+--- a/Pin.h
++++ b/Pin.h
+@@ -3,7 +3,7 @@
+ 
+ 
+ #include "enums.h"
+-#include "Net.h"
++
+ 
+ class Pin {
+ 	string name;
+@@ -16,17 +16,8 @@ public:
+ 			name(namestr), WCMarR(), WCSlopeR(INT_MAX), WCMarF(INT_MAX), WCSlopeF(
+ 			INT_MAX), validF(false), validR(false) {
+ 	}
+-	void updateWC(margin MAR, slope SLOP, Transitions Tr /* Fall or Rise */) {
+-		if (Tr == FALL) {
+-			WCMarF = WCMarF < MAR ? WCMarF : MAR;
+-			WCSlopeF = WCSlopeF > SLOP ? WCSlopeF : SLOP;
+-			validF = true;
+-		} else {
+-			WCMarR = WCMarR < MAR ? WCMarR : MAR;
+-			WCSlopeR = WCSlopeR > SLOP ? WCSlopeR : SLOP;
+-			validR = true;
+-		}
+-	}
++	void updateWC(margin MAR, slope SLOP, Transitions Tr /* Fall or Rise */);
++
+ private:
+ 	bool validF;
+ 	bool validR;
+diff --git a/Receiver.cpp b/Receiver.cpp
+new file mode 100644
+index 0000000..a476617
+--- /dev/null
++++ b/Receiver.cpp
+@@ -0,0 +1,23 @@
++/*
++ * Receiver.cpp
++ *
++ *  Created on: Sep 7, 2018
++ *      Author: Sammar
++ */
++
++#include "Receiver.h"
++
++void receiver::set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly ,slope s_deg
 +			) {
 +		if(cell && cell->name == cellName && inPin == pin ){
 +			slopeDeg = s_deg;
@@ -24,9 +644,379 @@ index 0529ecb..f99d281 100644
 +		}
 +	}
 +
- //	void print() {
- //		cout << "receiver:" << endl;
- //		cout << "cell = " << cell->getName() << " ,inPin=" << inPin << " ,slopeDeg="
++
++//	void receiver::print() {
++//		cout << "receiver:" << endl;
++//		cout << "cell = " << cell->getName() << " ,inPin=" << inPin << " ,slopeDeg="
++//				<< slopeDeg << " ,netDely=" << netDely << endl;
++//	}
+diff --git a/Receiver.h b/Receiver.h
+index 0529ecb..05a07c7 100644
+--- a/Receiver.h
++++ b/Receiver.h
+@@ -3,7 +3,6 @@
+ 
+ #include "enums.h"
+ 
+-class Cell;
+ 
+ class receiver {
+ public:
+@@ -16,11 +15,10 @@ public:
+ 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
+ 	}
+ 
+-//	void print() {
+-//		cout << "receiver:" << endl;
+-//		cout << "cell = " << cell->getName() << " ,inPin=" << inPin << " ,slopeDeg="
+-//				<< slopeDeg << " ,netDely=" << netDely << endl;
+-//	}
++	void set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly ,slope s_deg
++			);
++
++//	void print();
+ 
+ };
+ 
+diff --git a/Table.cpp b/Table.cpp
+new file mode 100644
+index 0000000..e5aae90
+--- /dev/null
++++ b/Table.cpp
+@@ -0,0 +1,161 @@
++/*
++ * Table.cpp
++ *
++ *  Created on: Sep 7, 2018
++ *      Author: Sammar
++ */
++#include "Table.h"
++
++void Table::AddTable(int** table, MAXMIN AnlsType, Transitions Tr, int r,
++		int c) {
++	if (table_rows < 0 || table_cols < 0) {
++		table_rows = r;
++		table_cols = c;
++	}
++	if (!table) {
++		cout << "null  at " << __func__ << endl;
++	} else {
++		_16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)] = table;
++		++tables_num;
++
++		//cout<< AnlsType<<" "<<Tr<<" num="<<tables_num<<endl;
++	}
++}
++
++template<typename T>
++T** Table::GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope,
++		load outload) {
++	return _16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)];
++}
++
++template<typename T>
++T Table::GetTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
++		load outload) {
++	return _16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)][inslope][outload];
++}
++
++template<typename T>
++T Table::GetTableAV(MAXMIN AnlsType, Transitions Tr, unsigned int inslopeindex,
++		unsigned int outloadindex, bool exactld, bool exactSlp) {
++	T tmp = 0;
++	if (exactSlp && exactld) { //exact
++		return this->GetTableVal(AnlsType, Tr, inslopeindex, outloadindex);
++	} else { //not exact average nearby
++		if (inslopeindex != 0 && outloadindex != 0) {
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
++					outloadindex - 1);
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
++					outloadindex);
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
++					outloadindex - 1);
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex, outloadindex);
++			return tmp / 4;
++		} else if (inslopeindex == 0) { // one of them is zero - if both the first if would be taken
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
++					outloadindex - 1);
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex, outloadindex);
++			return tmp / 2;
++		} else if (outloadindex == 0) {
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex, outloadindex);
++			tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
++					outloadindex);
++			return tmp / 2;
++		}
++	}
++	return -1;
++}
++
++template<typename T>
++T Table::GetExtTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
++		load outload, unsigned int inslopeindex, unsigned int outloadindex,
++		bool exactld, bool exactSlp) {
++	//edge cases
++	int ldsize = OUT_LOAD_POINTS_PTR->size();
++	int slpsize = IN_SLOPE_POINTS_PTR->size();
++	int ldind = outloadindex == -1 ? ldsize - 1 : outloadindex;
++	int slpind = inslopeindex == -1 ? slpsize - 1 : inslopeindex;
++	T RowDel = GetRowDelta(AnlsType, Tr, slpind, outloadindex == -1);
++	T ColDel = GetColDelta(AnlsType, Tr, ldind, inslopeindex -= -1);
++	slope yDel = inslope - IN_SLOPE_POINTS_PTR->operator [](slpind);
++	delay xDel = outload - OUT_LOAD_POINTS_PTR->operator [](ldind); //TODO: ADD EXACT/NONEXACT CASES
++	if ((inslopeindex == -1 || inslopeindex == 0)
++			&& (outloadindex == -1 || outloadindex == 0)) { //two indexes outside
++		return GetTableVal(AnlsType, Tr, slpind, ldind) + xDel * RowDel
++				+ yDel * ColDel;
++	} else if (inslopeindex == -1 || inslopeindex == 0) {
++		return GetTableVal(AnlsType, Tr, slpind, ldind) + yDel * ColDel;
++	} else if (outloadindex == -1 || outloadindex == 0) {
++		return GetTableVal(AnlsType, Tr, slpind, ldind) + xDel * RowDel;
++	}
++	return -1;
++}
++
++template<typename T>
++T Table::GetColDelta(MAXMIN AnlsType, Transitions Tr, unsigned int Col,
++		bool down) {
++	T Del;
++	int size = IN_SLOPE_POINTS_PTR->size();
++	if (!down) {
++		Del = GetTableVal(AnlsType, Tr, 0, Col)
++				- GetTableVal(AnlsType, Tr, 1, Col);
++		return Del
++				/ (IN_SLOPE_POINTS_PTR->operator [](0)
++						- IN_SLOPE_POINTS_PTR->operator [](1));
++	} else {
++		Del = GetTableVal(AnlsType, Tr, size - 1, Col)
++				- GetTableVal(AnlsType, Tr, size - 2, Col);
++		return Del
++				/ (IN_SLOPE_POINTS_PTR->operator [](size - 1)
++						- IN_SLOPE_POINTS_PTR->operator [](size - 2));
++
++	}
++}
++
++template<typename T>
++T Table::GetRowDelta(MAXMIN AnlsType, Transitions Tr, unsigned int Row,
++		bool right) {
++	T Del;
++	int size = OUT_LOAD_POINTS_PTR->size();
++	if (!right) {
++		Del = GetTableVal(AnlsType, Tr, Row, 0)
++				- GetTableVal(AnlsType, Tr, Row, 1);
++		return Del
++				/ (OUT_LOAD_POINTS_PTR->operator [](0)
++						- OUT_LOAD_POINTS_PTR->operator [](1));
++	} else {
++		Del = GetTableVal(AnlsType, Tr, Row, size - 1)
++				- GetTableVal(AnlsType, Tr, Row, size - 2);
++		return Del
++				/ (OUT_LOAD_POINTS_PTR->operator [](size - 1)
++						- OUT_LOAD_POINTS_PTR->operator [](size - 2));
++
++	}
++}
++
++//	~Table() {
++//		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
++//			delete
++//		}
++//	}
++
++void Table::print() {
++	for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
++		int** table = iter.operator *().second;
++		if (!table) {
++
++			cout << "-------------------shit no table " << endl << endl;
++
++		} else {
++			cout << iter.operator *().first.first << " "
++					<< iter.operator *().first.second << endl;
++
++			for (int r = 0; r < table_rows; r++) {
++				for (int c = 0; c < table_cols; c++) {
++					cout << table[r][c] << " | ";
++				}
++				cout << endl;
++			}
++		}
++	}
++	cout << "+++++++++++++++++++++++++++++++++++++" << endl;
++}
+diff --git a/Table.h b/Table.h
+index ad56f1e..56166b4 100644
+--- a/Table.h
++++ b/Table.h
+@@ -20,152 +20,33 @@ public:
+ 			table_rows(-1), table_cols(-1), tables_num(0), IN_SLOPE_POINTS_PTR(NULL),OUT_LOAD_POINTS_PTR(NULL){
+ 	}
+ 
+-	void AddTable(int** table, MAXMIN AnlsType, Transitions Tr, int r, int c) {
+-		if (table_rows < 0 || table_cols < 0) {
+-			table_rows = r;
+-			table_cols = c;
+-		}
+-		if (!table) {
+-			cout << "null  at " << __func__ << endl;
+-		} else {
+-			_16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)] = table;
+-			++tables_num;
++	//	~Table() {
++	//		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
++	//			delete
++	//		}
++	//	}
+ 
+-			//cout<< AnlsType<<" "<<Tr<<" num="<<tables_num<<endl;
+-		}
+-	}
++	void AddTable(int** table, MAXMIN AnlsType, Transitions Tr, int r, int c);
+ 
+ 	T** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope,
+-			load outload) {
+-		return _16tables[pair<MAXMIN, Transitions>(AnlsType,Tr)];
+-	}
++			load outload) ;
++
+ 	T GetTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
+-				load outload){
+-		return _16tables[pair<MAXMIN, Transitions>(AnlsType,Tr)][inslope][outload];
+-	}
++				load outload);
++
+ 	T GetTableAV(MAXMIN AnlsType, Transitions Tr, unsigned int inslopeindex,
+-			unsigned int outloadindex, bool exactld, bool exactSlp) {
+-		T tmp = 0;
+-		if (exactSlp && exactld) { //exact
+-			return this->GetTableVal(AnlsType, Tr, inslopeindex, outloadindex);
+-		} else { //not exact average nearby
+-			if (inslopeindex != 0 && outloadindex != 0) {
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
+-						outloadindex - 1);
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
+-						outloadindex);
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
+-						outloadindex - 1);
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
+-						outloadindex);
+-				return tmp / 4;
+-			} else if (inslopeindex == 0) { // one of them is zero - if both the first if would be taken
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
+-						outloadindex - 1);
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
+-						outloadindex);
+-				return tmp / 2;
+-			} else if (outloadindex == 0) {
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
+-						outloadindex);
+-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
+-						outloadindex);
+-				return tmp / 2;
+-			}
+-		}
+-		return -1;
+-	}
++			unsigned int outloadindex, bool exactld, bool exactSlp) ;
+ 
+ 	T GetExtTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
+ 			load outload, unsigned int inslopeindex, unsigned int outloadindex,
+-			bool exactld, bool exactSlp) {
+-		//edge cases
+-		int ldsize = OUT_LOAD_POINTS_PTR->size();
+-		int slpsize = IN_SLOPE_POINTS_PTR->size();
+-		int ldind = outloadindex == -1 ? ldsize - 1 : outloadindex;
+-		int slpind = inslopeindex == -1 ? slpsize - 1 : inslopeindex;
+-		T RowDel = GetRowDelta(AnlsType, Tr, slpind, outloadindex == -1);
+-		T ColDel = GetColDelta(AnlsType, Tr, ldind, inslopeindex -= -1);
+-		slope yDel = inslope - IN_SLOPE_POINTS_PTR->operator [](slpind);
+-		delay xDel = outload - OUT_LOAD_POINTS_PTR->operator [](ldind); //TODO: ADD EXACT/NONEXACT CASES
+-		if ((inslopeindex == -1 || inslopeindex == 0)
+-				&& (outloadindex == -1 || outloadindex == 0)) { //two indexes outside
+-			return GetTableVal(AnlsType, Tr, slpind, ldind) + xDel * RowDel
+-					+ yDel * ColDel;
+-		} else if (inslopeindex == -1 || inslopeindex == 0) {
+-			return GetTableVal(AnlsType, Tr, slpind, ldind) + yDel * ColDel;
+-		} else if (outloadindex == -1 || outloadindex == 0) {
+-			return GetTableVal(AnlsType, Tr, slpind, ldind) + xDel * RowDel;
+-		}
+-		return -1;
+-	}
++			bool exactld, bool exactSlp) ;
+ 	T GetColDelta(MAXMIN AnlsType, Transitions Tr, unsigned int Col,
+-			bool down) {
+-		T Del;
+-		int size = IN_SLOPE_POINTS_PTR->size();
+-		if (!down) {
+-			Del = GetTableVal(AnlsType, Tr, 0, Col)
+-					- GetTableVal(AnlsType, Tr, 1, Col);
+-			return Del
+-					/ (IN_SLOPE_POINTS_PTR->operator [](0)
+-							- IN_SLOPE_POINTS_PTR->operator [](1));
+-		} else {
+-			Del = GetTableVal(AnlsType, Tr, size - 1, Col)
+-					- GetTableVal(AnlsType, Tr, size - 2, Col);
+-			return Del
+-					/ (IN_SLOPE_POINTS_PTR->operator [](size - 1)
+-							- IN_SLOPE_POINTS_PTR->operator [](size - 2));
+-
+-		}
+-	}
++			bool down) ;
+ 
+ 	T GetRowDelta(MAXMIN AnlsType, Transitions Tr, unsigned int Row,
+-			bool right) {
+-		T Del;
+-		int size = OUT_LOAD_POINTS_PTR->size();
+-		if (!right) {
+-			Del = GetTableVal(AnlsType, Tr, Row, 0)
+-					- GetTableVal(AnlsType, Tr, Row, 1);
+-			return Del
+-					/ (OUT_LOAD_POINTS_PTR->operator [](0)
+-							- OUT_LOAD_POINTS_PTR->operator [](1));
+-		} else {
+-			Del = GetTableVal(AnlsType, Tr, Row, size - 1)
+-					- GetTableVal(AnlsType, Tr, Row, size - 2);
+-			return Del
+-					/ (OUT_LOAD_POINTS_PTR->operator [](size - 1)
+-							- OUT_LOAD_POINTS_PTR->operator [](size - 2));
+-
+-		}
+-	}
+-
+-//	~Table() {
+-//		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
+-//			delete
+-//		}
+-//	}
++			bool right) ;
+ 
+-	void print() {
+-		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
+-			int** table = iter.operator *().second;
+-			if (!table) {
+-
+-				cout << "-------------------shit no table " << endl << endl;
+-
+-			} else {
+-				cout << iter.operator *().first.first << " "
+-						<< iter.operator *().first.second << endl;
+-
+-				for (int r = 0; r < table_rows; r++) {
+-					for (int c = 0; c < table_cols; c++) {
+-						cout << table[r][c] << " | ";
+-					}
+-					cout << endl;
+-				}
+-			}
+-		}
+-		cout << "+++++++++++++++++++++++++++++++++++++" << endl;
+-	}
++	void print();
+ };
+ 
+ #endif
 diff --git a/main.cpp b/main.cpp
 index d7c885b..39356eb 100644
 --- a/main.cpp

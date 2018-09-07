@@ -26,6 +26,8 @@ using namespace boost;
 //global
 int pathidmax = 0;
 int pathidmin = 0;
+map<int,string> MAXpaths;
+map<int,string> MINpaths;
 
 queue<Cell*> InputTable;
 queue<Cell*> InputDataTable;

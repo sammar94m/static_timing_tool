@@ -2,7 +2,7 @@
 #define RECEIVER_H_
 
 #include "enums.h"
-
+class Cell;
 
 class receiver {
 public:

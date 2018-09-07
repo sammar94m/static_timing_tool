@@ -35,6 +35,7 @@ public:
 
 	load getCin(pin input);
 	const map<output_pin, Net*>& getOutMap();
+
 	load getCout(output_pin out);
 	string getName();
 	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
@@ -46,7 +47,7 @@ public:
 	void updateWCdat(pin PIN, margin Margin, MAXMIN mode,
 			Transitions Tr/*FALL OR RISE*/);
 	margin getWCdat(input_pin input, MAXMIN MODE);
-	static void print();
+	void print();
 };
 
 #endif

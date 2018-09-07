@@ -27,12 +27,8 @@ public:
 	delay getRcvDelay(Cell* rcv, pin rcvpin);
 	slope getRcvSlope(slope drvSlope, Cell* rcv, pin rcvpin);
 
-	void set_driver(Cell* cell, pin pin_t) {
-		driver = pair<Cell*, pin>(cell, pin_t);
-	}
-	void add_receiver(Cell* cell, pin pin_t) {
-		receivers.push_front(new receiver(cell, pin_t));
-	}
+	void set_driver(Cell* cell, pin pin_t) ;
+	void add_receiver(Cell* cell, pin pin_t);
 	void set_clkdat(clockdat& clk);
 
 	//virtual void print();
