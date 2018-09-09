@@ -5,23 +5,55 @@
 #include "Net.h"
 
 class inputNet: public Net {
-	string AR_TIME;
-	int SL_RISE;
-	int SL_FALL;
+	clockdat clk;
+	static clockdat* refclk;
 public:
-	inputNet(string name, bool isClk, int low, int high, int SL_RISE,
-			int SL_FALL,string AR_TIME) :
+	inputNet(string name, bool isClk,slope SL_RISE,
+			slope SL_FALL,string AR_TIME,int low=0, int high=0):Net(name, INPUT, isClk) {
+		vector<string> tmp;
+		boost:split(AR_TIME," \n",tmp);
+		int Ariv;
+		switch(tmp[2]){
+		case "AF":
+			Ariv=atoi(tmp[1].c_str())+refclk->high;
+			break;
+		case "BF":
+			Ariv=refclk->high-atoi(tmp[1].c_str());
+			break;
+		case "AR":
+			Ariv=atoi(tmp[1].c_str());
+			break;
+		case "BR":
+			Ariv=refclk->high+refclk->low-atoi(tmp[1].c_str());
+			break;
 
-			Net(name, INPUT, isClk, low, high), AR_TIME(AR_TIME), SL_RISE(
-					SL_RISE), SL_FALL(SL_FALL) {
+		}
+
 	}
-	;
-	//virtual ~inputNet(){};
+	load getCin(pin input) {
+		return 0;
+	}
+	virtual load getCout(output_pin out) {
+		return 0;
+	}
+	virtual delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
+			Transitions Tr, slope inslope, load outload) {
+		if (Tr == RR || Tr == FR) {
+			return 0;
+		} else {
+			return 0;
+		}
+	}
+	virtual slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
+			Transitions Tr, slope inslope, load outload) {
+		if (Tr == RR || Tr == FR) {
+			return 0;
+		} else {
+			return 0;
+		}
+	}
+
 };
-
-
-
-
 
 #endif
 

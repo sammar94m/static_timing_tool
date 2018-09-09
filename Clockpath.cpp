@@ -9,7 +9,7 @@
 #include "Net.h"
 #include "Flipflop.h"
 #include "Clockdat.h"
-
+extern queue<Cell*> inputClkTable;
 
 
 void clockPathDelayCalcAux(pin input, clockdat& inclock, Cell* currCell, MAXMIN MODE) {
@@ -41,4 +41,13 @@ void clockPathDelayCalcAux(pin input, clockdat& inclock, Cell* currCell, MAXMIN 
 		}
 	}
 	return;
+}
+
+void clockPathDelayCalc(){
+	Cell* curr;
+	while(!InputClkTable.empty()){
+		curr=InputClkTable.pop();
+		clockPathDelayCalcAux("",((inputNet*)curr)->clk,curr,MAX);
+		clockPathDelayCalcAux("",((inputNet*)curr)->clk,curr,MIN);
+
 }

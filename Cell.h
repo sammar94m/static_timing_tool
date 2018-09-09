@@ -33,14 +33,14 @@ public:
 
 	//virtual void saveclkdat(clockdat cd){};
 
-	load getCin(pin input);
+	virtual load getCin(pin input);
 	const map<output_pin, Net*>& getOutMap();
 
-	load getCout(output_pin out);
+	virtual load getCout(output_pin out);
 	string getName();
-	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
+	virtual delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
 			Transitions Tr, slope inslope, load outload);
-	slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
+	virtual slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
 			Transitions Tr, slope inslope, load outload);
 	bool PossiblTr(input_pin in, output_pin out, Transitions Tr);
 

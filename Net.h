@@ -18,7 +18,7 @@ public:
 	list<receiver*> receivers; //
 	map<receiver*,clockdat> ClkArtime; //refrence clock rise
 	//--------------
-	Net(string name, netType type, bool isClk, int low, int high) :
+	Net(string name, netType type, bool isClk) :
 			name(name), type(type), isClk(isClk) {
 	};
 
