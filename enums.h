@@ -65,7 +65,7 @@ enum FlopSetup {
 
 
 typedef enum _netType {
-	Local, INPUT, OUTPUT
+	LOCAL, INPUT, OUTPUT
 } netType;
 
 

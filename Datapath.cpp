@@ -9,7 +9,7 @@
 #include "Net.h"
 #include "Flipflop.h"
 #include "Clockdat.h"
-extern queue<Cell*> InputDataTable;
+extern queue<Net*> InputDataTable;
 using namespace std;
 
 string to_string(Transitions TR) {
@@ -97,17 +97,26 @@ margin dataPathDelayCalcAux(pin input, slope inslope, Cell* currCell,
 
 void dataPathDelayCalc() {
 	Cell* curr;
-	while(!InputDataTable.empty()){
-		curr=InputDataTable.pop();
-		if(curr->type==FlipFlop){
-			clockdat& clk=((FlipFlop)curr).getClkdat();
-			dataPathDelayCalcAux("CLK",clk.RISE_SLOPE,curr,InputDataTable,0,RISE,MAX,"",clk.RISE_AR);
-			dataPathDelayCalcAux("CLK",clk.RISE_SLOPE,curr,InputDataTable,0,RISE,MIN,"",clk.RISE_AR);
-			((FlipFlop)curr).visited=true;
-		}else{
-			dataPathDelayCalcAux("",0,curr,InputDataTable,0,RISE,MAX,"",0);
-			dataPathDelayCalcAux("",0,curr,InputDataTable,0,RISE,MIN,"",0);
+	queue<Cell*> FFQueue;
+	while (!InputDataTable.empty()) {
+		Net* inNetp;
+		inNetp =InputDataTable.front();
+		InputDataTable.pop();
+		for(auto RcvIt=inNetp->receivers.begin();RcvIt!=inNetp->receivers.end();++RcvIt){
+		curr=(*RcvIt)->cell;
+		dataPathDelayCalcAux("", 0, curr, FFQueue, 0, RISE, MAX, "", 0);
+		dataPathDelayCalcAux("", 0, curr, FFQueue, 0, RISE, MIN, "", 0);
 		}
+	}
+	while (!FFQueue.empty()) {
+		curr = FFQueue.front();
+		InputDataTable.pop();
+		clockdat& clk = ((FlipFlop) curr).getClkdat();
+		dataPathDelayCalcAux("CLK", clk.RISE_SLOPE, curr, FFQueue, 0, RISE, MAX,
+				"", clk.RISE_AR);
+		dataPathDelayCalcAux("CLK", clk.RISE_SLOPE, curr, FFQueue, 0, RISE, MIN,
+				"", clk.RISE_AR);
+		((FlipFlop) curr).visited = true;
 	}
 }
 
