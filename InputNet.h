@@ -4,29 +4,36 @@
 #include "enums.h"
 #include "Net.h"
 
+using namespace boost;
+
 class inputNet: public Net {
+
+public:
 	clockdat clk;
 	static clockdat* refclk;
-public:
-	inputNet(string name, bool isClk,slope SL_RISE,
-			slope SL_FALL,string AR_TIME,int low=0, int high=0):Net(name, INPUT, isClk) {
+	inputNet(string name, bool isClk, slope SL_RISE, slope SL_FALL,
+			string AR_TIME) :
+			Net(name, INPUT, isClk) {
 		vector<string> tmp;
-		boost:split(AR_TIME," \n",tmp);
-		int Ariv;
-		switch(tmp[2]){
-		case "AF":
-			Ariv=atoi(tmp[1].c_str())+refclk->high;
-			break;
-		case "BF":
-			Ariv=refclk->high-atoi(tmp[1].c_str());
-			break;
-		case "AR":
-			Ariv=atoi(tmp[1].c_str());
-			break;
-		case "BR":
-			Ariv=refclk->high+refclk->low-atoi(tmp[1].c_str());
-			break;
+		boost::split(tmp, AR_TIME, boost::is_any_of(" \n\r"));
+		if (tmp.empty())
+			cout << "empty vec" << endl;
 
+		cout << "tmp vec:" << tmp[0] << "  " << tmp[1] << endl;
+		clk.RISE_SLOPE = SL_RISE;
+		clk.FALL_SLOPE = SL_FALL;
+		int Ariv = 0;
+		if (refclk) {
+			if (tmp[1] == "AF") {
+				Ariv = atoi(tmp[0].c_str()) + this->refclk->high;
+			} else if (tmp[1] == "BF") {
+				Ariv = this->refclk->high - atoi(tmp[0].c_str());
+			} else if (tmp[1] == "AR") {
+				Ariv = atoi(tmp[0].c_str());
+			} else if (tmp[1] == "BR") {
+				Ariv = this->refclk->high + this->refclk->low
+						- atoi(tmp[0].c_str());
+			}
 		}
 
 	}

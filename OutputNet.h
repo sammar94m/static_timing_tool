@@ -9,21 +9,12 @@ class outputNet: public Net {
 	string REQ_TIME;
 	load outload;
 public:
-	outputNet(string name, bool isClk, int low, int high, string REQ_TIME,
-			load outload) :
-			Net(name, OUTPUT, isClk, low, high), REQ_TIME(REQ_TIME), outload(
-					outload) {
-	};
+	outputNet(string name, bool isClk, string REQ_TIME, load outload) :
+			Net(name, OUTPUT, isClk), REQ_TIME(REQ_TIME), outload(outload) {
+	}
+	;
 
 	//virtual ~outputNet(){};
 };
-
-
-
-
-
-
-
-
 
 #endif

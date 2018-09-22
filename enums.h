@@ -24,6 +24,8 @@
 #include <string>
 #include <utility>
 #include <math.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 

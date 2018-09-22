@@ -25,7 +25,7 @@ virtual ~FlipFlop(){};
 	void setHold(MAXMIN AnlsType, Transitions Tr, int val) ;
 
 	int getHold(MAXMIN AnlsType, Transitions Tr);
-	clockdat& getClkdat();
+	clockdat* getClkdat();
 
 
 };

@@ -13,7 +13,7 @@ RM = rm -f
 	
 # Creating object files using default rules">makefile
 else
-echo "CCC = "$1" 
+echo "CC = "$1" 
 CXXFLAGS = -g -Wall -std=c++11 
 CXXLINK = \$(CC) 
 LIBS =

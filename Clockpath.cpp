@@ -7,8 +7,10 @@
 #include "enums.h"
 #include "Cell.h"
 #include "Net.h"
+#include "InputNet.h"
 #include "Flipflop.h"
 #include "Clockdat.h"
+
 extern queue<Net*> InputClkTable;
 
 void clockPathDelayCalcAux(pin input, clockdat& inclock, Cell* currCell,
@@ -60,12 +62,14 @@ void clockPathDelayCalc() {
 	Cell* curr;
 	while (!InputClkTable.empty()) {
 		Net* inNetp;
-		inNetp = InputDataTable.front();
-		InputDataTable.pop();
+		inNetp = InputClkTable.front();
+		InputClkTable.pop();
 		for (auto RcvIt = inNetp->receivers.begin();
 				RcvIt != inNetp->receivers.end(); ++RcvIt) {
 			curr = (*RcvIt)->cell;
-			clockPathDelayCalcAux("", ((inputNet*) curr)->clk, curr, MAX);
-			clockPathDelayCalcAux("", ((inputNet*) curr)->clk, curr, MIN);
+			clockPathDelayCalcAux("", ((inputNet*) inNetp)->clk, curr, MAX);
+			clockPathDelayCalcAux("", ((inputNet*) inNetp)->clk, curr, MIN);
 		}
 	}
+}
+

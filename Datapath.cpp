@@ -36,7 +36,7 @@ margin dataPathDelayCalcAux(pin input, slope inslope, Cell* currCell,
 	SS << S;
 	if ((currCell->type == FlIPFlOP && ((FlipFlop*) currCell)->visited == false)
 			|| currCell->type == OUTCELL) {
-		int skew = (((FlipFlop*) currCell)->getClkdat().RISE_AR - Reftime)
+		int skew = (((FlipFlop*) currCell)->getClkdat()->RISE_AR - Reftime)
 				* (1 - 2 * MODE == MIN);
 		margin tmp = cumdelay
 				- ((FlipFlop*) currCell)->getSetup(MODE, inPossiTr);
@@ -111,12 +111,12 @@ void dataPathDelayCalc() {
 	while (!FFQueue.empty()) {
 		curr = FFQueue.front();
 		InputDataTable.pop();
-		clockdat& clk = ((FlipFlop) curr).getClkdat();
-		dataPathDelayCalcAux("CLK", clk.RISE_SLOPE, curr, FFQueue, 0, RISE, MAX,
-				"", clk.RISE_AR);
-		dataPathDelayCalcAux("CLK", clk.RISE_SLOPE, curr, FFQueue, 0, RISE, MIN,
-				"", clk.RISE_AR);
-		((FlipFlop) curr).visited = true;
+		clockdat* clkp = ((FlipFlop*) curr)->getClkdat();
+		dataPathDelayCalcAux("CLK", clkp->RISE_SLOPE, curr, FFQueue, 0, RISE, MAX,
+				"", clkp->RISE_AR);
+		dataPathDelayCalcAux("CLK", clkp->RISE_SLOPE, curr, FFQueue, 0, RISE, MIN,
+				"", clkp->RISE_AR);
+		((FlipFlop*) curr)->visited = true;
 	}
 }
 

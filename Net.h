@@ -18,8 +18,12 @@ public:
 	list<receiver*> receivers; //
 	map<receiver*,clockdat> ClkArtime; //refrence clock rise
 	//--------------
-	Net(string name, netType type, bool isClk) :
-			name(name), type(type), isClk(isClk) {
+	Net(string _name, netType _type , bool _isClk) :
+			name(_name), type(_type), isClk(_isClk) {
+	};
+
+	Net(string name, bool isClk) :
+			name(name), type(_netType::LOCAL), isClk(isClk) {
 	};
 
 	virtual ~Net(){}

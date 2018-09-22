@@ -16,8 +16,6 @@
 #include "OutputNet.h"
 #include "InputNet.h"
 #include "enums.h"
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace boost;
@@ -26,12 +24,12 @@ using namespace boost;
 //global
 int pathidmax = 0;
 int pathidmin = 0;
-map<int,string> MAXpaths;
-map<int,string> MINpaths;
+map<int, string> MAXpaths;
+map<int, string> MINpaths;
 
-queue<Cell*> InputTable;
-queue<Cell*> InputDataTable;
-queue<Cell*> InputClkTable;
+queue<Net*> InputTable;
+queue<Net*> InputDataTable;
+queue<Net*> InputClkTable;
 
 map<string, Net*> NetsTable;
 map<string, Cell*> CellsTable;
@@ -56,7 +54,7 @@ void decreate_table(T*** arr, int n);
 //void printNet(Net * net);
 
 //void printMainCell(Cell* cell);
-void split(const string &s, const char* delim, vector<string> & v);
+//void split(const string &s, const char* delim, vector<string> & v);
 
 vector<string> readLine(ifstream& myfile);
 cellType string_to_cellType(string s);
@@ -69,7 +67,7 @@ void LibraryFile(const string& filename) {
 	ifstream myfile;
 	myfile.open(filename.c_str());
 	if (!myfile.is_open()) {
-		cout << "file was not opened" << endl;
+		throw "file was not opened";
 		return;
 	}
 	string s;
@@ -81,18 +79,18 @@ void LibraryFile(const string& filename) {
 		load LOAD;
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
-			for (int i = 0; i < vec.size(); i++)
-				cout << " " << vec[i];
-			cout << endl;
+//			for (int i = 0; i < vec.size(); i++)
+//				cout << " " << vec[i];
+//			cout << endl;
 
 			if (vec.empty())
 				continue;
 
 			if (vec[0] == "CELL") {
-				cout << "CELL" << endl;
+//				cout << "CELL" << endl;
 				cellTemplate = new CellTemplate(vec[1]);
 				if (!cellTemplate) {
-					cout << "failed to alloc cellTemplate" << endl;
+					throw "failed to alloc cellTemplate"; // << endl;
 				}
 				CellTemplateTable[vec[1]] = cellTemplate;
 
@@ -114,7 +112,7 @@ void LibraryFile(const string& filename) {
 								atoi(vec[i].c_str()));
 				}
 			} else if (vec[0] == "ARC") {
-				cout << "ARC" << endl;
+//				cout << "ARC" << endl;
 				input_pin inpin = vec[1];
 				output_pin outpin = vec[2];
 
@@ -124,11 +122,12 @@ void LibraryFile(const string& filename) {
 
 				while (!myfile.eof()) {
 					vec = readLine(myfile);
-					for (int i = 0; i < vec.size(); i++)
-						cout << " " << vec[i];
-					cout << endl;
+//					for (int i = 0; i < vec.size(); i++)
+//						cout << " " << vec[i];
+//					cout << endl;
+
 					if (vec.empty()) {
-						cout << "ARC reading done" << endl;
+//						cout << "ARC reading done" << endl;
 						break;
 					}
 
@@ -166,33 +165,33 @@ void LibraryFile(const string& filename) {
 					Transitions Tr = getTransitions(tableSpec[3]);
 
 					if (tableSpec[0] == "DELAY") {
-						cout << "delay table added" << endl;
+//						cout << "delay table added" << endl;
 						cellTemplate->delayTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((delay**) table,
 								AnlsType, Tr, rows, cols);
 						table = NULL;
 
 					} else {
-						cout << "slope table added" << endl;
+//						cout << "slope table added" << endl;
 						cellTemplate->slopeTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((slope**) table,
 								AnlsType, Tr, rows, cols);
 						table = NULL;
 
 					}
-					cout << "  good till now" << endl;
+//					cout << "  good till now" << endl;
 				}
 
 			} else if (vec[0] == "CHECK") {
-				cout << " ---- CHECK" << endl;
+//				cout << " ---- CHECK" << endl;
 				if (cellTemplate != NULL
 						&& cellTemplate->template_name == "FF") {
 					int i = 4;
 					while (i--) {
 						vec = readLine(myfile);
-						for (int i = 0; i < vec.size(); i++)
-							cout << " " << vec[i];
-						cout << endl;
+//						for (int i = 0; i < vec.size(); i++)
+//							cout << " " << vec[i];
+//						cout << endl;
 						cellTemplate->setupdata[setupdataIndex(vec[0])] = atoi(
 								vec[1].c_str());
 					}
@@ -212,7 +211,7 @@ void DesignConstraintsFile(const string& filename) {
 	ifstream myfile;
 	myfile.open(filename.c_str());
 	if (!myfile.is_open()) {
-		cout << "file was not opened" << endl;
+		throw "file was not opened"; // << endl;
 		return;
 	}
 
@@ -229,36 +228,29 @@ void DesignConstraintsFile(const string& filename) {
 
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
-			for (int i = 0; i < vec.size(); i++)
-				cout << " " << vec[i];
-			cout << endl;
+//			for (int i = 0; i < vec.size(); i++)
+//				cout << " " << vec[i];
+//			cout << endl;
 
 			if (vec.empty()) { //end of cell
-				if (net) { // next line is empty.
-					if (isOut) {
-						net = new outputNet(name, isClk, LOW, HIGH, REQ_TIME,
-								LOAD);
-						Cell* dummycell = new Cell(OUTCELL,
-								string("dummy_") + name,
-								NULL);
 
-						dummycell->outMap.insert(
-								pair<output_pin, Net*>("dummy", net));
+				if (isOut) {
+					net = new outputNet(name, isClk, REQ_TIME, LOAD);
+					NetsTable[name] = net;
 
-						net->set_driver(dummycell, "dummy");
+				} else {
+					net = new inputNet(name, isClk, SL_RISE, SL_FALL, AR_TIME);
+					NetsTable[name] = net;
+					InputTable.push(net);
+					if (isClk) {
+						InputClkTable.push(net);
+						if (name == "CLK") {
 
-						NetsTable[name] = net;
+
+							 inputNet::refclk = &(((inputNet*)net)->clk);
+						}
 					} else {
-						net = new inputNet(name, isClk, LOW, HIGH, SL_RISE,
-								SL_FALL, AR_TIME);
-						Cell* dummycell = new Cell(INCELL,
-								string("dummy_") + name,
-								NULL);
-						dummycell->inMap.insert(
-								pair<input_pin, Net*>("A", net));
-						net->add_receiver(dummycell, "dummy");
-						InputTable.push(dummycell);
-						NetsTable[name] = net;
+						InputDataTable.push(net);
 					}
 				}
 
@@ -275,7 +267,12 @@ void DesignConstraintsFile(const string& filename) {
 			} else if (vec[0] == "TYPE") {
 				isClk = vec[1] == "CLOCK";
 			} else if (vec[0] == "AR_TIME") {
-				AR_TIME = vec[1] + vec[2] + vec[3];
+				for (int i = 0; i < vec.size(); ++i)
+					cout<< vec[i]<<" | ";
+				cout<<endl;
+
+				AR_TIME = vec[1] + ' ' + vec[2]+' ' + vec[3] + '\0';
+
 			} else if (vec[0] == "SL_RISE") {
 				SL_RISE = atoi(vec[1].c_str());
 			} else if (vec[0] == "SL_FALL") {
@@ -285,7 +282,7 @@ void DesignConstraintsFile(const string& filename) {
 			} else if (vec[0] == "LOW") {
 				LOW = atoi(vec[1].c_str());
 			} else if (vec[0] == "REQ_TIME") {
-				REQ_TIME = vec[1] + vec[2] + vec[3];
+				REQ_TIME = vec[1] + ' ' + vec[2] +' '+ vec[3] + '\0';
 			} else if (vec[0] == "LOAD") {
 				LOAD = atoi(vec[1].c_str());
 			}
@@ -304,7 +301,7 @@ void NetlistFileFormat(const string& filename) {
 	ifstream myfile;
 	myfile.open(filename.c_str());
 	if (!myfile.is_open()) {
-		cout << "file was not opened" << endl;
+		throw "file was not opened"; // << endl;
 		return;
 	}
 
@@ -314,9 +311,7 @@ void NetlistFileFormat(const string& filename) {
 	if (s == "Netlist file format:") {
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
-			for (int i = 0; i < vec.size(); i++)
-				cout << " " << vec[i];
-			cout << endl;
+
 			if (vec.empty()) {
 				continue;
 			}
@@ -326,39 +321,36 @@ void NetlistFileFormat(const string& filename) {
 				CellsTable.insert(pair<string, Cell*>(vec[1], cell));
 				while (!myfile.eof()) {
 					vec = readLine(myfile);
-					for (int i = 0; i < vec.size(); i++)
-						cout << " " << vec[i];
-					cout << endl;
+
 					if (vec.empty()) { //end of cell
 						break;
 					}
 					if (vec[0] == "IN") {
 						Net* driverNet = NULL;
 						driverNet = NetsTable.find(vec[2])->second;
-						if (driverNet != NULL) { // driver exists
-						} else {
-							// this shoud be fixed
-							driverNet = new Net(vec[2], Local, false, 0, 0);
-							//cout << "error input net does not exist" << endl;
+
+						if (!driverNet) {
+
+							driverNet = new Net(vec[2], false);
 						}
+
 						driverNet->add_receiver(cell, vec[1]);
-						cell->inMap.insert(pair<pin, Net*>(vec[1], driverNet));
+						cell->inMap[vec[1]] = driverNet;
+
 					} else if (vec[0] == "OUT") {
+
 						Net* outPutNet = NULL;
 						outPutNet = NetsTable.find(vec[2])->second;
-						if (outPutNet == NULL) {
-							outPutNet = new Net(vec[2], OUTPUT, 0, 0, 0);
-							NetsTable.insert(
-									pair<string, Net*>(vec[1], outPutNet));
+
+						if (!outPutNet) {
+							outPutNet = new Net(vec[2], false);
+							NetsTable[vec[1]] = outPutNet;
 						}
-						cell->outMap.insert(
-								pair<string, Net*>(vec[1], outPutNet));
+
+						cell->outMap[vec[1]] = outPutNet;
 						outPutNet->set_driver(cell, cell->name);
 					}
 				}
-			} else {
-				//cout << "error in startNewNet   vec[0] =  " << vec[0] << endl;
-				return;
 			}
 		}
 	}
@@ -370,7 +362,7 @@ void ParasiticsInterconnectFile(const string& filename) {
 	ifstream myfile;
 	myfile.open(filename.c_str());
 	if (!myfile.is_open()) {
-		cout << "file was not opened" << endl;
+		throw "file was not opened"; // << endl;
 		return;
 	}
 
@@ -382,9 +374,10 @@ void ParasiticsInterconnectFile(const string& filename) {
 	if (s == "Parasitics interconnect file:") {
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
-			for (int i = 0; i < vec.size(); i++)
-				cout << " " << vec[i];
-			cout << endl;
+//			for (int i = 0; i < vec.size(); i++)
+//				cout << " " << vec[i];
+//			cout << endl;
+
 			if (vec.empty()) {
 				net = NULL;
 				continue;
@@ -420,40 +413,52 @@ void ParasiticsInterconnectFile(const string& filename) {
  *		ParasiticsInterconnectFile.txt
  * */
 
-//void dfsPrint() {
-//	while (!InputTable.empty()) {
-//		Cell* cell = InputTable.front();
-//		if (!cell) {
-//			cout << "null cell" << endl;
-//			break;
-//		}
-//		dfsPrintaux(cell);
-//	}
-//}
-//
-//void dfsPrintaux(Cell* cell) {
-//	if (!cell) {
-//		cout << "null cell" << endl;
-//		return;
-//	}
-//	auto outmap = cell->getOutMap();
-//	for (auto iter = outmap.begin(); iter != outmap.end(); ++iter) {
-//		cout << (*iter).first << " --> ";
-//		auto net = (*iter).second;
-//		auto rcvCells = net->receivers;
-//		for (auto cellIter = rcvCells.begin(); cellIter != rcvCells.end();
-//				++cellIter) {
-//			receiver* rcv = (*cellIter);
-//			dfsPrintaux(rcv->cell);
-//		}
-//	}
-//
-//}
+void dfsPrintaux(Cell* cell) {
+	if (!cell) {
+		cout << "null cell" << endl;
+		return;
+	} else
+		cout << "dfs start from cell " << cell->name << endl;
+	auto outmap = cell->getOutMap();
+	for (auto iter = outmap.begin(); iter != outmap.end(); ++iter) {
+		cout << (*iter).first << " --> ";
+		auto net = (*iter).second;
+		auto rcvCells = net->receivers;
+		for (auto cellIter = rcvCells.begin(); cellIter != rcvCells.end();
+				++cellIter) {
+			receiver* rcv = (*cellIter);
+			dfsPrintaux(rcv->cell);
+		}
+	}
+}
+
+void dfsPrint() {
+	if (InputTable.empty()) {
+		cout << "empty table " << endl;
+	} else
+		cout << "InputTable size = " << InputTable.size() << endl;
+
+	while (!InputTable.empty()) {
+		Net* net = InputTable.front();
+		if (!net) {
+			cout << "null net" << endl;
+			break;
+		}
+
+		for (auto iter = net->receivers.begin(); iter != net->receivers.end();
+				++iter) {
+			dfsPrintaux((*iter)->cell);
+		}
+
+		InputTable.pop();
+	}
+}
+
 int main(int argc, char* argv[]) {
 
-//	cout << " reading LibraryFile" << endl;
-//	LibraryFile("LibraryFile.txt");
-//	cout << " LibraryFile done" << endl;
+	cout << " reading LibraryFile" << endl;
+	LibraryFile("LibraryFile.txt");
+	cout << " LibraryFile done" << endl;
 //	cout
 //			<< "-----------------------------------------------------------------------"
 //			<< endl;
@@ -476,9 +481,11 @@ int main(int argc, char* argv[]) {
 //			it->second->print();
 //		}
 
-//	cout << " reading NetlistFileFormat" << endl;
-//	NetlistFileFormat("NetlistFileFormat.txt");
-//	cout << " NetlistFileFormat done " << endl;
+	cout << " reading NetlistFileFormat" << endl;
+	NetlistFileFormat("NetlistFileFormat.txt");
+	cout << " NetlistFileFormat done " << endl;
+
+	dfsPrint();
 
 	return 0;
 }

@@ -23,11 +23,11 @@ int FlipFlop::getHold(MAXMIN AnlsType, Transitions Tr) {
 	return setup[2 * AnlsType + Tr];
 
 }
-clockdat& FlipFlop::getClkdat() {
+clockdat* FlipFlop::getClkdat() {
 	for (auto rcvIT = inMap["CLK"]->receivers.begin();
 			rcvIT != inMap["CLK"]->receivers.end(); ++rcvIT) {
 		if ((rcvIT.operator *())->cell == this) {
-			return (inMap["CLK"]->ClkArtime[(rcvIT.operator *())]);
+			return &(inMap["CLK"]->ClkArtime[(rcvIT.operator *())]);
 		}
 	}
 	return NULL;
