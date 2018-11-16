@@ -1,5 +1,4 @@
 Design constraints file:
-
 INPUT: IN1
 TYPE: DATA
 AR_TIME: 25 AR CLK
@@ -35,4 +34,3 @@ OUTPUT: OUT2
 TYPE: DATA
 REQ_TIME: 50 BR CLK
 LOAD: 10
-

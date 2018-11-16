@@ -14,8 +14,8 @@ Cell.o: Cell.cpp Cell.h enums.h Net.h Receiver.h Clockdat.h \
  CellTemplate.h Table.h
 CellTemplate.o: CellTemplate.cpp CellTemplate.h enums.h Table.h
 Clockdat.o: Clockdat.cpp
-Clockpath.o: Clockpath.cpp enums.h Cell.h Net.h Receiver.h Clockdat.h \
- CellTemplate.h Table.h InputNet.h Flipflop.h
+Clockpath.o: Clockpath.cpp Clockpath.h enums.h Cell.h Net.h Receiver.h \
+ Clockdat.h CellTemplate.h Table.h InputNet.h Flipflop.h
 Createnetlist.o: Createnetlist.cpp Createnetlist.h Cell.h enums.h Net.h \
  Receiver.h Clockdat.h CellTemplate.h Table.h OutputNet.h InputNet.h
 Datapath.o: Datapath.cpp enums.h Cell.h Net.h Receiver.h Clockdat.h \
@@ -31,7 +31,8 @@ Receiver.o: Receiver.cpp Receiver.h enums.h Cell.h Net.h Clockdat.h \
  CellTemplate.h Table.h
 Table.o: Table.cpp
 main.o: main.cpp Createnetlist.h Cell.h enums.h Net.h Receiver.h \
- Clockdat.h CellTemplate.h Table.h OutputNet.h InputNet.h
+ Clockdat.h CellTemplate.h Table.h OutputNet.h InputNet.h Clockpath.h \
+ Flipflop.h
 
 # Cleaning old files before new make 
 clean:

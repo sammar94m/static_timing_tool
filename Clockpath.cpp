@@ -4,15 +4,23 @@
  *  Created on: 9 Aug 2018
  *      Author: Saeed
  */
-#include "enums.h"
-#include "Cell.h"
-#include "Net.h"
-#include "InputNet.h"
-#include "Flipflop.h"
-#include "Clockdat.h"
 
-extern queue<Net*> InputClkTable;
-
+#include "Clockpath.h"
+void calcClkNetDelay(Net* currNet,receiver* rcvrp,slope drvslope[], input_pin recieverpin, clockdat& nextstageclock, clockdat& inclock, delay Celldelay[]){
+	slope Netoutslope[2];
+	delay netdelay;
+	Netoutslope[_FALL_] = currNet->getRcvSlope(drvslope[_FALL_],
+			((rcvrp))->cell, recieverpin);
+	Netoutslope[_RISE_] = currNet->getRcvSlope(drvslope[_RISE_],
+			((rcvrp))->cell, recieverpin); //TODO: FIX 0 slope
+	netdelay = currNet->getRcvDelay((rcvrp)->cell, recieverpin); // calculate Net delay
+	clockdat tmpclock(
+			inclock.RISE_AR + Celldelay[_FALL_] + inclock.low
+					+ Celldelay[_RISE_], Netoutslope[_FALL_],
+			Netoutslope[_RISE_], inclock.high + Celldelay[_RISE_]+netdelay,
+			inclock.low + Celldelay[_FALL_]+netdelay);
+	nextstageclock=tmpclock;
+}
 void clockPathDelayCalcAux(pin input, clockdat& inclock, Cell* currCell,
 		MAXMIN MODE) {
 	if (currCell->type == FlIPFlOP || currCell->type == OUTCELL) {
@@ -36,19 +44,9 @@ void clockPathDelayCalcAux(pin input, clockdat& inclock, Cell* currCell,
 				inclock.RISE_SLOPE, outload);
 		for (auto rcvCellIt = currNet->receivers.begin();
 				rcvCellIt != currNet->receivers.end(); ++rcvCellIt) {
+			clockdat nextstageclock;
+			calcClkNetDelay(currNet,*rcvCellIt,drvslope,(*(rcvCellIt))->inPin,nextstageclock,inclock,Celldelay);
 			input_pin recieverpin = (*(rcvCellIt))->inPin;
-			slope Netoutslope[2];
-			delay netdelay;
-			Netoutslope[_FALL_] = currNet->getRcvSlope(drvslope[_FALL_],
-					(*(rcvCellIt))->cell, recieverpin);
-			Netoutslope[_RISE_] = currNet->getRcvSlope(drvslope[_RISE_],
-					(*(rcvCellIt))->cell, recieverpin);
-			netdelay = currNet->getRcvDelay((*(rcvCellIt))->cell, recieverpin); // calculate Net delay
-			clockdat nextstageclock(
-					inclock.RISE_AR + Celldelay[_FALL_] + inclock.low
-							+ Celldelay[_RISE_], Netoutslope[_FALL_],
-					Netoutslope[_RISE_], inclock.high + Celldelay[_RISE_],
-					inclock.low + Celldelay[_FALL_]);
 			currNet->ClkArtime[*(rcvCellIt)] = nextstageclock;
 			// Move On
 			clockPathDelayCalcAux(recieverpin, nextstageclock,
@@ -66,9 +64,16 @@ void clockPathDelayCalc() {
 		InputClkTable.pop();
 		for (auto RcvIt = inNetp->receivers.begin();
 				RcvIt != inNetp->receivers.end(); ++RcvIt) {
-			curr = (*RcvIt)->cell;
-			clockPathDelayCalcAux("", ((inputNet*) inNetp)->clk, curr, MAX);
-			clockPathDelayCalcAux("", ((inputNet*) inNetp)->clk, curr, MIN);
+			clockdat nextstageclock;
+			clockdat inclock=((inputNet*) inNetp)->clk;
+			slope drvslope[2];
+			drvslope[_FALL_]=((inputNet*) inNetp)->clk.FALL_SLOPE;
+			drvslope[_RISE_]=((inputNet*) inNetp)->clk.RISE_SLOPE;
+			delay delaytmp[2]={1};
+			calcClkNetDelay(inNetp,*RcvIt,drvslope,(*(RcvIt))->inPin,nextstageclock,inclock,delaytmp);
+			inNetp->ClkArtime[*RcvIt]=nextstageclock;
+			clockPathDelayCalcAux((*RcvIt)->inPin, inNetp->ClkArtime[*RcvIt], (*RcvIt)->cell, MAX);
+			clockPathDelayCalcAux((*RcvIt)->inPin, inNetp->ClkArtime[*RcvIt], (*RcvIt)->cell, MIN);
 		}
 	}
 }

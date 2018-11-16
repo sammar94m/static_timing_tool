@@ -27,7 +27,7 @@ public:
 		type = UNKNOWN;
 	}
 	Cell(cellType type, string name, CellTemplate *Template) :
-			type(type), name(name), Template(NULL) {
+			type(type), name(name), Template(Template) {
 
 	}
 
