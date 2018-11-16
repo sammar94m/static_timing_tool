@@ -60,6 +60,15 @@ public:
 		}
 	}
 
+	static clockdat* getRefclk(){
+		return refclk;
+	}
+
+	static void setRefclk(clockdat* ref){
+
+		refclk = ref;
+	}
+
 };
 
 #endif
