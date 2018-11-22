@@ -5,6 +5,7 @@ using namespace std;
 
 #include "Createnetlist.h"
 #include "Clockpath.h"
+#include "Datapath.h"
 
 #define BUFFZISE 1024
 //global
@@ -94,7 +95,7 @@ void list_command(vector<string>& vec) {
 
 	} else if (vec[1] == "clocks") {
 		cout << "..." << endl;
-		cout << "CLOCK	" << "RECEIVER	" << "AR TIME		" << "HIGH	" << "LOW	"
+		cout << "CLOCK | " << "RECEIVER|    " << "AR TIME | " << "HIGH   | " << "LOW |  "
 				<< "REF" << endl;
 		for (auto it = NetsTable.begin(); it != NetsTable.end(); ++it) {
 			if (!(it->second->isClk))
@@ -103,7 +104,7 @@ void list_command(vector<string>& vec) {
 			for (auto rcvit = it->second->ClkArtime.begin();
 					rcvit != it->second->ClkArtime.end(); ++rcvit) {
 				cout << "	" << rcvit->first->cell->name << "	"
-						<< rcvit->second.RISE_AR << "	" << rcvit->second.high
+						<<"	" <<rcvit->second.RISE_AR << "	" << rcvit->second.high
 						<< "	" << rcvit->second.low << "	"
 						<< inputNet::getRefclk()->RISE_AR << endl;
 				;
@@ -151,8 +152,10 @@ void run_command(vector<string>& vec){
 	if (vec[1] == "clock") {
 		cout << "..." << endl;
 		clockPathDelayCalc();
-
-	}else{
+	}else if(vec[1]=="data"){
+		dataPathDelayCalc();
+	}
+	else{
 		cout << "what?!" << endl;
 
 	}

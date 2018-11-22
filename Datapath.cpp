@@ -4,14 +4,7 @@
  *  Created on: 9 Aug 2018
  *      Author: Saeed
  */
-#include "enums.h"
-#include "Cell.h"
-#include "Net.h"
-#include "Flipflop.h"
-#include "Clockdat.h"
-extern queue<Net*> InputDataTable;
-using namespace std;
-
+#include "Datapath.h"
 string to_string(Transitions TR) {
 	if (TR == FALL) {
 		return string("F");

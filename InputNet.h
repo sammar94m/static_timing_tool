@@ -12,7 +12,7 @@ public:
 	clockdat clk;
 	static clockdat* refclk;
 	inputNet(string name, bool isClk, slope SL_RISE, slope SL_FALL,
-			string AR_TIME) :
+			string AR_TIME, int HIGH, int LOW) :
 			Net(name, INPUT, isClk) {
 		vector<string> tmp;
 		boost::split(tmp, AR_TIME, boost::is_any_of(" \n\r"));
@@ -22,6 +22,9 @@ public:
 		cout << "tmp vec:" << tmp[0] << "  " << tmp[1] << endl;
 		clk.RISE_SLOPE = SL_RISE;
 		clk.FALL_SLOPE = SL_FALL;
+		clk.high = HIGH;
+		clk.low = LOW;
+
 		int Ariv = 0;
 		if (refclk) {
 			if (tmp[1] == "AF") {
@@ -31,10 +34,10 @@ public:
 			} else if (tmp[1] == "AR") {
 				Ariv = atoi(tmp[0].c_str());
 			} else if (tmp[1] == "BR") {
-				Ariv = this->refclk->high + this->refclk->low
-						- atoi(tmp[0].c_str());
+				Ariv = this->refclk->high + this->refclk->low - atoi(tmp[0].c_str());
 			}
 		}
+		clk.RISE_AR = Ariv;
 
 	}
 	load getCin(pin input) {
