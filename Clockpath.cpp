@@ -70,7 +70,6 @@ void clockPathDelayCalcAux(pin input, clockdat& inclock, Cell* currCell,
 }
 
 void clockPathDelayCalc() {
-	Cell* curr;
 	while (!InputClkTable.empty()) {
 		Net* inNetp;
 		inNetp = InputClkTable.front();

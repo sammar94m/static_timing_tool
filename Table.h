@@ -17,7 +17,8 @@ public:
 	vector<load>* OUT_LOAD_POINTS_PTR;
 
 	Table() :
-			table_rows(-1), table_cols(-1), tables_num(0), IN_SLOPE_POINTS_PTR(NULL),OUT_LOAD_POINTS_PTR(NULL){
+			table_rows(-1), table_cols(-1), tables_num(0), IN_SLOPE_POINTS_PTR(
+					NULL), OUT_LOAD_POINTS_PTR(NULL) {
 	}
 
 	void AddTable(int** table, MAXMIN AnlsType, Transitions Tr, int r, int c) {
@@ -35,16 +36,20 @@ public:
 		}
 	}
 
-	T** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope,
-			load outload) {
-		return _16tables[pair<MAXMIN, Transitions>(AnlsType,Tr)];
+	T** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope, load outload) {
+		return _16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)];
 	}
 	T GetTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
-				load outload){
-		return _16tables[pair<MAXMIN, Transitions>(AnlsType,Tr)][inslope][outload];
+			load outload) {
+		if (_16tables.find(pair<MAXMIN, Transitions>(AnlsType, Tr))
+				== _16tables.end()) {
+			return -1;
+		} else {
+			return _16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)][inslope][outload];
+		}
 	}
-	T GetTableAV(MAXMIN AnlsType, Transitions Tr, unsigned int inslopeindex,
-			unsigned int outloadindex, bool exactld, bool exactSlp) {
+	T GetTableAV(MAXMIN AnlsType, Transitions Tr, int inslopeindex,
+			int outloadindex, bool exactld, bool exactSlp) {
 		T tmp = 0;
 		if (exactSlp && exactld) { //exact
 			return this->GetTableVal(AnlsType, Tr, inslopeindex, outloadindex);
@@ -77,8 +82,8 @@ public:
 	}
 
 	T GetExtTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
-			load outload, unsigned int inslopeindex, unsigned int outloadindex,
-			bool exactld, bool exactSlp) {
+			load outload, int inslopeindex, int outloadindex, bool exactld,
+			bool exactSlp) {
 		//edge cases
 		int ldsize = OUT_LOAD_POINTS_PTR->size();
 		int slpsize = IN_SLOPE_POINTS_PTR->size();
