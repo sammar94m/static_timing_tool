@@ -11,12 +11,12 @@ public:
 	int low; //clk param
 	int high; //clk param
 
-	clockdat(){
-		 RISE_AR =0;
-		 FALL_SLOPE=0;
-		 RISE_SLOPE=0;
-		 low=0; //clk param
-		 high=0; //clk param
+	clockdat() {
+		RISE_AR = 0;
+		FALL_SLOPE = 0;
+		RISE_SLOPE = 0;
+		low = 0; //clk param
+		high = 0; //clk param
 	}
 
 	clockdat(int RISE_AR, slope FALL_SLOPE, slope RISE_SLOPE, int low, int high) :

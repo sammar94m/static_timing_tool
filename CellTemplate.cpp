@@ -7,7 +7,7 @@
 #include "CellTemplate.h"
 
 delay CellTemplate::getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
-		Transitions Tr, slope inslope, load outload) {
+		InOutTr Tr, slope inslope, load outload) {
 	int indslp, indld;
 	bool exactslp, exactld;
 	indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);
@@ -23,7 +23,7 @@ delay CellTemplate::getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
 	return -1;
 }
 delay CellTemplate::getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
-		Transitions Tr, slope inslope, load outload) {
+		InOutTr Tr, slope inslope, load outload) {
 	int indslp, indld;
 	bool exactslp, exactld;
 	indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);

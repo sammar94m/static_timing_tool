@@ -29,7 +29,6 @@ extern map<string, Net*> NetsTable;
 extern map<string, Cell*> CellsTable;
 extern map<string, CellTemplate*> CellTemplateTable;
 
-
 void ParasiticsInterconnectFile(const string& filename);
 void NetlistFileFormat(const string& filename);
 
@@ -37,6 +36,6 @@ void DesignConstraintsFile(const string& filename);
 
 void LibraryFile(const string& filename);
 
-void dfsPrint() ;
+void dfsPrint();
 
 #endif /* CREATENETLIST_H_ */

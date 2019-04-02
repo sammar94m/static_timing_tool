@@ -6,17 +6,19 @@
 #include "Clockdat.h"
 #include "CellTemplate.h"
 #include "Table.h"
-
+#include "Pin.h"
 class Cell {
 public:
 	cellType type;
 	string name;
 	CellTemplate * Template;
-	std::map<input_pin, Net*> inMap;
-	map<output_pin, Net*> outMap;
+	map<input_pin, Net*> inMap;
+	Net* outNet;
+	pin outPin;
 	map<pin, load> pinLoadMap;
-	map<pin, margin> WCmarg[2];
-	Transitions WCtr[2];
+	map<pin, PinDat> PinData;
+	time_t visittime;
+	int ready_inputs;
 public:
 	virtual ~Cell() {
 		delete Template;
@@ -25,10 +27,13 @@ public:
 	Cell() {
 		Template = NULL;
 		type = UNKNOWN;
+		outNet = NULL;
+		visittime = time(NULL);
+		ready_inputs = 0;
 	}
-	Cell(cellType type, string name, CellTemplate *Template) :
-			type(type), name(name), Template(Template) {
-
+	Cell(cellType _type, string _name, CellTemplate* _Template) :
+			type(_type), name(_name), Template(_Template), outNet(NULL), visittime(
+					time(NULL)), ready_inputs(0) {
 	}
 
 	//virtual void saveclkdat(clockdat cd){};
@@ -39,15 +44,22 @@ public:
 	virtual load getCout(output_pin out);
 	string getName();
 	virtual delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload);
+			InOutTr Tr, slope inslope, load outload);
 	virtual slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload);
-	bool PossiblTr(input_pin in, output_pin out, Transitions Tr);
+			InOutTr Tr, slope inslope, load outload);
+	bool PossiblTr(input_pin in, output_pin out, InOutTr Tr);
 
 	void updateWCdat(pin PIN, margin Margin, MAXMIN mode,
-			Transitions Tr/*FALL OR RISE*/);
+			InOutTr Tr/*FALL OR RISE*/);
 	margin getWCdat(input_pin input, MAXMIN MODE);
+	inline bool isReady() {
+		return ready_inputs == getnumofinputs();
+	}
 	void print();
+	void CalcOutputData();
+	int getnumofinputs() {
+		return inMap.size();
+	}
 };
 
 #endif

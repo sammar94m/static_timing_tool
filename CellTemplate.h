@@ -25,10 +25,10 @@ public:
 	virtual ~CellTemplate() {
 	}
 
-	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload) ;
-	delay getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload) ;
+	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
+			slope inslope, load outload);
+	delay getSlope(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
+			slope inslope, load outload);
 	bool withinboundry(int ida, bool exacta);
 	template<typename T>
 	int getClosestindex(vector<T>& vec, int val, bool& exact);

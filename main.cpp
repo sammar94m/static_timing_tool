@@ -4,7 +4,6 @@
 using namespace std;
 
 #include "Createnetlist.h"
-#include "Clockpath.h"
 #include "Datapath.h"
 
 #define BUFFZISE 1024
@@ -29,24 +28,23 @@ map<string, CellTemplate*> CellTemplateTable;
 
  *		ParasiticsInterconnectFile.txt
  * */
-void printCircuit() {
-	for (auto it = CellsTable.begin(); it != CellsTable.end(); ++it) {
-		cout << it->first << " (" << it->second->Template->template_name << ")"
-				<< endl;
-		for (auto pinItr = it->second->inMap.begin();
-				pinItr != it->second->inMap.end(); ++pinItr) {
-			cout << "IN " << pinItr->first << "(" << pinItr->second->name << ")"
-					<< endl;
-		}
-		for (auto pinItr = it->second->outMap.begin();
-				pinItr != it->second->outMap.end(); ++pinItr) {
-			cout << "OUT " << pinItr->first << "(" << pinItr->second->name
-					<< ")" << endl;
-		}
-		cout << endl;
-	}
-}
-
+//void printCircuit() {
+//	for (auto it = CellsTable.begin(); it != CellsTable.end(); ++it) {
+//		cout << it->first << " (" << it->second->Template->template_name << ")"
+//				<< endl;
+//		for (auto pinItr = it->second->inMap.begin();
+//				pinItr != it->second->inMap.end(); ++pinItr) {
+//			cout << "IN " << pinItr->first << "(" << pinItr->second->name << ")"
+//					<< endl;
+//		}
+//		for (auto pinItr = it->second->outMap.begin();
+//				pinItr != it->second->outMap.end(); ++pinItr) {
+//			cout << "OUT " << pinItr->first << "(" << pinItr->second->name
+//					<< ")" << endl;
+//		}
+//		cout << endl;
+//	}
+//}
 void list_command(vector<string>& vec) {
 	if (vec[1] == "cells") {
 		cout << "..." << endl;
@@ -95,18 +93,17 @@ void list_command(vector<string>& vec) {
 
 	} else if (vec[1] == "clocks") {
 		cout << "..." << endl;
-		cout << "CLOCK | " << "RECEIVER|    " << "AR TIME | " << "HIGH   | " << "LOW |  "
-				<< "REF" << endl;
+		cout << "CLOCK | " << "RECEIVER|    " << "AR TIME | " << "HIGH   | "
+				<< "LOW |  " << "REF" << endl;
 		for (auto it = NetsTable.begin(); it != NetsTable.end(); ++it) {
 			if (!(it->second->isClk))
 				continue;
 			cout << it->second->name << ':' << endl;
 			for (auto rcvit = it->second->ClkArtime.begin();
 					rcvit != it->second->ClkArtime.end(); ++rcvit) {
-				cout << "	" << rcvit->first->cell->name << "	"
-						<<"	" <<rcvit->second.RISE_AR << "	" << rcvit->second.high
-						<< "	" << rcvit->second.low << "	"
-						<< inputNet::getRefclk()->RISE_AR << endl;
+				cout << "	" << rcvit->first->cell->name << "	" << "	"
+						<< rcvit->second.RISE_AR << "	" << rcvit->second.high
+						<< "	" << rcvit->second.low << "	" << endl;
 				;
 			}
 		}
@@ -129,7 +126,7 @@ void list_command(vector<string>& vec) {
 			}
 		}
 
-	}else{
+	} else {
 		cout << "what?!" << endl;
 
 	}
@@ -141,21 +138,20 @@ void print_command(vector<string>& vec) {
 
 	} else if (vec[1] == "circuit") {
 		cout << "..." << endl;
-		printCircuit();
-	}else{
+//		printCircuit();
+	} else {
 		cout << "what?!" << endl;
 
 	}
 }
 
-void run_command(vector<string>& vec){
+void run_command(vector<string>& vec) {
 	if (vec[1] == "clock") {
 		cout << "..." << endl;
-		clockPathDelayCalc();
-	}else if(vec[1]=="data"){
+//		clockPathDelayCalc();
+	} else if (vec[1] == "data") {
 		dataPathDelayCalc();
-	}
-	else{
+	} else {
 		cout << "what?!" << endl;
 
 	}

@@ -7,19 +7,19 @@
 
 #include "Flipflop.h"
 
-void FlipFlop::setSetup(MAXMIN AnlsType, Transitions Tr, int val) {
+void FlipFlop::setSetup(MAXMIN AnlsType, InOutTr Tr, int val) {
 	setup[2 * AnlsType + Tr] = val;
 }
 
-int FlipFlop::getSetup(MAXMIN AnlsType, Transitions Tr) {
+int FlipFlop::getSetup(MAXMIN AnlsType, InOutTr Tr) {
 	return setup[2 * AnlsType + Tr];
 
 }
-void FlipFlop::setHold(MAXMIN AnlsType, Transitions Tr, int val) {
+void FlipFlop::setHold(MAXMIN AnlsType, InOutTr Tr, int val) {
 	setup[2 * AnlsType + Tr] = val;
 }
 
-int FlipFlop::getHold(MAXMIN AnlsType, Transitions Tr) {
+int FlipFlop::getHold(MAXMIN AnlsType, InOutTr Tr) {
 	return setup[2 * AnlsType + Tr];
 
 }
@@ -32,5 +32,4 @@ clockdat* FlipFlop::getClkdat() {
 	}
 	return NULL;
 }
-
 

@@ -15,6 +15,7 @@ public:
 	;
 
 	//virtual ~outputNet(){};
+	void calcRcvData(receiver* pRcv, const PinDat& Data);
 };
 
 #endif

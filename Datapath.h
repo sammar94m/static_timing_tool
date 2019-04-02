@@ -8,8 +8,6 @@
 #ifndef DATAPATH_H_
 #define DATAPATH_H_
 
-
-
 #include "enums.h"
 #include "Cell.h"
 #include "Net.h"

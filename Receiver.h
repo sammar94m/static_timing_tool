@@ -15,8 +15,8 @@ public:
 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
 	}
 
-	void set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly ,slope s_deg
-			);
+	void set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly,
+			slope s_deg);
 
 //	void print();
 

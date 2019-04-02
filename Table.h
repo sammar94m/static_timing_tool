@@ -10,7 +10,7 @@ private:
 	int table_rows;
 	int table_cols;
 	int tables_num;
-	map<pair<MAXMIN, Transitions>, T**> _16tables;
+	map<pair<MAXMIN, InOutTr>, T**> _16tables;
 
 public:
 	vector<slope>* IN_SLOPE_POINTS_PTR;
@@ -18,10 +18,10 @@ public:
 
 	Table() :
 			table_rows(-1), table_cols(-1), tables_num(0), IN_SLOPE_POINTS_PTR(
-					NULL), OUT_LOAD_POINTS_PTR(NULL) {
+			NULL), OUT_LOAD_POINTS_PTR(NULL) {
 	}
 
-	void AddTable(int** table, MAXMIN AnlsType, Transitions Tr, int r, int c) {
+	void AddTable(int** table, MAXMIN AnlsType, InOutTr Tr, int r, int c) {
 		if (table_rows < 0 || table_cols < 0) {
 			table_rows = r;
 			table_cols = c;
@@ -29,26 +29,25 @@ public:
 		if (!table) {
 			cout << "null  at " << __func__ << endl;
 		} else {
-			_16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)] = table;
+			_16tables[pair<MAXMIN, InOutTr>(AnlsType, Tr)] = table;
 			++tables_num;
 
 			//cout<< AnlsType<<" "<<Tr<<" num="<<tables_num<<endl;
 		}
 	}
 
-	T** GetTable(MAXMIN AnlsType, Transitions Tr, slope inslope, load outload) {
-		return _16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)];
+	T** GetTable(MAXMIN AnlsType, InOutTr Tr, slope inslope, load outload) {
+		return _16tables[pair<MAXMIN, InOutTr>(AnlsType, Tr)];
 	}
-	T GetTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
-			load outload) {
-		if (_16tables.find(pair<MAXMIN, Transitions>(AnlsType, Tr))
+	T GetTableVal(MAXMIN AnlsType, InOutTr Tr, slope inslope, load outload) {
+		if (_16tables.find(pair<MAXMIN, InOutTr>(AnlsType, Tr))
 				== _16tables.end()) {
 			return -1;
 		} else {
-			return _16tables[pair<MAXMIN, Transitions>(AnlsType, Tr)][inslope][outload];
+			return _16tables[pair<MAXMIN, InOutTr>(AnlsType, Tr)][inslope][outload];
 		}
 	}
-	T GetTableAV(MAXMIN AnlsType, Transitions Tr, int inslopeindex,
+	T GetTableAV(MAXMIN AnlsType, InOutTr Tr, int inslopeindex,
 			int outloadindex, bool exactld, bool exactSlp) {
 		T tmp = 0;
 		if (exactSlp && exactld) { //exact
@@ -81,9 +80,8 @@ public:
 		return -1;
 	}
 
-	T GetExtTableVal(MAXMIN AnlsType, Transitions Tr, slope inslope,
-			load outload, int inslopeindex, int outloadindex, bool exactld,
-			bool exactSlp) {
+	T GetExtTableVal(MAXMIN AnlsType, InOutTr Tr, slope inslope, load outload,
+			int inslopeindex, int outloadindex, bool exactld, bool exactSlp) {
 		//edge cases
 		int ldsize = OUT_LOAD_POINTS_PTR->size();
 		int slpsize = IN_SLOPE_POINTS_PTR->size();
@@ -104,8 +102,7 @@ public:
 		}
 		return -1;
 	}
-	T GetColDelta(MAXMIN AnlsType, Transitions Tr, unsigned int Col,
-			bool down) {
+	T GetColDelta(MAXMIN AnlsType, InOutTr Tr, unsigned int Col, bool down) {
 		T Del;
 		int size = IN_SLOPE_POINTS_PTR->size();
 		if (!down) {
@@ -124,8 +121,7 @@ public:
 		}
 	}
 
-	T GetRowDelta(MAXMIN AnlsType, Transitions Tr, unsigned int Row,
-			bool right) {
+	T GetRowDelta(MAXMIN AnlsType, InOutTr Tr, unsigned int Row, bool right) {
 		T Del;
 		int size = OUT_LOAD_POINTS_PTR->size();
 		if (!right) {

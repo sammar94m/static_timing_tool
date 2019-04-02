@@ -21,7 +21,7 @@ using namespace boost;
 
 int setupdataIndex(string s);
 
-Transitions getTransitions(string tr);
+InOutTr getInOutTr(string tr);
 
 template<typename T>
 T** create_table(int n, int m, const vector<string>& vec);
@@ -33,7 +33,6 @@ vector<string> readLine(ifstream& myfile);
 cellType string_to_cellType(string s);
 
 //--------------------------------------------------------------------------------------
-
 
 //--------------------------------------------------------------------------------------
 void LibraryFile(const string& filename) {
@@ -135,7 +134,7 @@ void LibraryFile(const string& filename) {
 					else
 						throw("invalid AnlsType");
 
-					Transitions Tr = getTransitions(tableSpec[3]);
+					InOutTr Tr = getInOutTr(tableSpec[3]);
 
 					if (tableSpec[0] == "DELAY") {
 //						cout << "delay table added" << endl;
@@ -211,16 +210,14 @@ void DesignConstraintsFile(const string& filename) {
 					net = new outputNet(name, isClk, REQ_TIME, LOAD);
 					NetsTable[name] = net;
 					//cout<<"-----"<<name<<"----"<<endl;
-				} else if(isOut == 2){
-					net = new inputNet(name, isClk, SL_RISE, SL_FALL, AR_TIME, HIGH, LOW);
+				} else if (isOut == 2) {
+					net = new inputNet(name, isClk, SL_RISE, SL_FALL, AR_TIME,
+							HIGH, LOW);
 					//cout<<"-----"<<name<<"----"<<endl;
 					NetsTable[name] = net;
 					InputTable.push(net);
 					if (isClk) {
 						InputClkTable.push(net);
-						if (name == "CLK") {
-							inputNet::setRefclk(&((inputNet*)net)->clk);
-						}
 					} else {
 						InputDataTable.push(net);
 					}
@@ -240,10 +237,10 @@ void DesignConstraintsFile(const string& filename) {
 				isClk = vec[1] == "CLOCK";
 			} else if (vec[0] == "AR_TIME") {
 				for (int i = 0; i < vec.size(); ++i)
-				//	cout<< vec[i]<<" | ";
-				//cout<<endl;
+					//	cout<< vec[i]<<" | ";
+					//cout<<endl;
 
-				AR_TIME = vec[1] + ' ' + vec[2]+' ' + vec[3] + '\0';
+					AR_TIME = vec[1] + ' ' + vec[2] + ' ' + vec[3] + '\0';
 
 			} else if (vec[0] == "SL_RISE") {
 				SL_RISE = atoi(vec[1].c_str());
@@ -254,7 +251,7 @@ void DesignConstraintsFile(const string& filename) {
 			} else if (vec[0] == "LOW") {
 				LOW = atoi(vec[1].c_str());
 			} else if (vec[0] == "REQ_TIME") {
-				REQ_TIME = vec[1] + ' ' + vec[2] +' '+ vec[3] + '\0';
+				REQ_TIME = vec[1] + ' ' + vec[2] + ' ' + vec[3] + '\0';
 			} else if (vec[0] == "LOAD") {
 				LOAD = atoi(vec[1].c_str());
 			}
@@ -290,12 +287,13 @@ void NetlistFileFormat(const string& filename) {
 			if (vec[0] == "OCC") {
 				CellTemplate* ctemplate = CellTemplateTable.find(vec[2])->second;
 
-				if(!ctemplate){
-					cout<<"error:no such template: " +vec[2]<< endl;
+				if (!ctemplate) {
+					cout << "error:no such template: " + vec[2] << endl;
 					continue;
 				}
 
-				Cell* cell = new Cell(string_to_cellType(vec[2]), vec[1],ctemplate);
+				Cell* cell = new Cell(string_to_cellType(vec[2]), vec[1],
+						ctemplate);
 				CellsTable.insert(pair<string, Cell*>(vec[1], cell));
 				while (!myfile.eof()) {
 					vec = readLine(myfile);
@@ -306,7 +304,6 @@ void NetlistFileFormat(const string& filename) {
 					if (vec[0] == "IN") {
 						Net* driverNet = NULL;
 						driverNet = NetsTable.find(vec[2])->second;
-
 
 						if (!driverNet) {
 
@@ -326,7 +323,8 @@ void NetlistFileFormat(const string& filename) {
 							NetsTable[vec[2]] = outPutNet;
 						}
 
-						cell->outMap[vec[1]] = outPutNet;
+						cell->outNet = outPutNet;
+						cell->outPin = vec[1];
 						outPutNet->set_driver(cell, cell->name);
 					}
 				}
@@ -384,46 +382,46 @@ void ParasiticsInterconnectFile(const string& filename) {
 	}
 }
 //--------------------------------------------------------------------------------------
-void dfsPrintaux(Cell* cell) {
-	if (!cell) {
-		cout << "null cell" << endl;
-		return;
-	} else
-		cout << "dfs start from cell " << cell->name << endl;
-	auto outmap = cell->getOutMap();
-	for (auto iter = outmap.begin(); iter != outmap.end(); ++iter) {
-		cout << (*iter).first << " --> ";
-		auto net = (*iter).second;
-		auto rcvCells = net->receivers;
-		for (auto cellIter = rcvCells.begin(); cellIter != rcvCells.end();
-				++cellIter) {
-			receiver* rcv = (*cellIter);
-			dfsPrintaux(rcv->cell);
-		}
-	}
-}
+/*void dfsPrintaux(Cell* cell) {
+ if (!cell) {
+ cout << "null cell" << endl;
+ return;
+ } else
+ cout << "dfs start from cell " << cell->name << endl;
+ //	auto outmap = cell->getOutMap();
+ for (auto iter = outmap.begin(); iter != outmap.end(); ++iter) {
+ cout << (*iter).first << " --> ";
+ auto net = (*iter).second;
+ auto rcvCells = net->receivers;
+ for (auto cellIter = rcvCells.begin(); cellIter != rcvCells.end();
+ ++cellIter) {
+ receiver* rcv = (*cellIter);
+ dfsPrintaux(rcv->cell);
+ }
+ }
+ }*/
 
-void dfsPrint() {
-	if (InputTable.empty()) {
-		cout << "empty table " << endl;
-	} else
-		cout << "InputTable size = " << InputTable.size() << endl;
+/*void dfsPrint() {
+ if (InputTable.empty()) {
+ cout << "empty table " << endl;
+ } else
+ cout << "InputTable size = " << InputTable.size() << endl;
 
-	while (!InputTable.empty()) {
-		Net* net = InputTable.front();
-		if (!net) {
-			cout << "null net" << endl;
-			break;
-		}
+ while (!InputTable.empty()) {
+ Net* net = InputTable.front();
+ if (!net) {
+ cout << "null net" << endl;
+ break;
+ }
 
-		for (auto iter = net->receivers.begin(); iter != net->receivers.end();
-				++iter) {
-			dfsPrintaux((*iter)->cell);
-		}
+ for (auto iter = net->receivers.begin(); iter != net->receivers.end();
+ ++iter) {
+ dfsPrintaux((*iter)->cell);
+ }
 
-		InputTable.pop();
-	}
-}
+ InputTable.pop();
+ }
+ }*/
 
 int setupdataIndex(string s) { // bug
 	if (s == "MAX_RR")
@@ -437,16 +435,16 @@ int setupdataIndex(string s) { // bug
 
 }
 
-Transitions getTransitions(string tr) {
+InOutTr getInOutTr(string tr) {
 	//cout << "tr=" << tr << endl;
 	if (tr == "FF") {
-		return Transitions::FF;
+		return InOutTr::FF;
 	} else if (tr == "FR") {
-		return Transitions::FR;
+		return InOutTr::FR;
 	} else if (tr == "RF") {
-		return Transitions::RF;
+		return InOutTr::RF;
 	} else if (tr == "RR") {
-		return Transitions::RR;
+		return InOutTr::RR;
 	} else
 		throw("invalid Transition");
 }
@@ -460,7 +458,7 @@ T** create_table(int rows, int cols, const vector<string>& vec) {
 
 	for (int i = 0; i < vec.size(); i++) {
 		if (vec[i] != "") {
-			matrix[i / cols][i % cols] = atoi(vec[i].c_str());// (T) stoi(vec[i], 0, 10);
+			matrix[i / cols][i % cols] = atoi(vec[i].c_str()); // (T) stoi(vec[i], 0, 10);
 		}
 	}
 

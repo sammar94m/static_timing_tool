@@ -5,11 +5,5 @@
  *      Author: compm
  */
 
-
 #include "InputNet.h"
-
-clockdat* inputNet::refclk;
-
-
-
 

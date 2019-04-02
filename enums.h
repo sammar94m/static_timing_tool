@@ -1,8 +1,6 @@
 #ifndef ENUMS_H_
 #define ENUMS_H_
 
-
-
 #include <list>
 #include <map>
 #include <string>
@@ -26,6 +24,7 @@
 #include <math.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <time.h>
 
 using namespace std;
 
@@ -41,40 +40,41 @@ typedef std::string output_pin;
 typedef std::string pin;
 
 //global
-extern int pathidmax,pathidmin;
-extern map<int,string> MAXpaths;
-extern map<int,string> MINpaths;
-
-
+extern int pathidmax, pathidmin;
+extern map<int, string> MAXpaths;
+extern map<int, string> MINpaths;
+typedef enum Timetag_ {
+	BF, BR, AF, AR
+} timetag;
+typedef struct valid_ {
+	int val;
+	timetag tag;
+} valid;
+typedef struct required_ {
+	int val;
+	timetag tag;
+} required;
 enum cellType {
 	INCELL, OUTCELL, FlIPFlOP, COMB, UNKNOWN
 };
 
-typedef enum _Trnsitions {
-	/* per 1 wire*/FALL = 0, RISE = 3,/*per in and an out */
-	FF = 1, RF = 4, FR = 2, RR = 5
-} Transitions;
-
+typedef enum _inOutTr {
+	FF, RF, FR, RR
+} InOutTr;
+typedef enum _Tr {
+	FALL, RISE
+} Tr;
 typedef enum _MAXMIN {
 	MIN, MAX
 } MAXMIN;
-
 
 enum FlopSetup {
 	MAX_RR, MAX_FR, MIN_RR, MIN_FR
 };
 
-
-
 typedef enum _netType {
 	LOCAL, INPUT, OUTPUT
 } netType;
 
-
-
 #endif
-
-
-
-
 

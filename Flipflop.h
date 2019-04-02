@@ -4,7 +4,6 @@
 #include "enums.h"
 #include "Cell.h"
 
-
 class FlipFlop: public Cell {
 public:
 	bool visited;
@@ -16,27 +15,18 @@ public:
 		this->name = name;
 		this->visited = false;
 	}
-virtual ~FlipFlop(){};
+	virtual ~FlipFlop() {
+	}
+	;
 
+	void setSetup(MAXMIN AnlsType, InOutTr Tr, int val);
 
-	void setSetup(MAXMIN AnlsType, Transitions Tr, int val) ;
+	int getSetup(MAXMIN AnlsType, InOutTr Tr);
+	void setHold(MAXMIN AnlsType, InOutTr Tr, int val);
 
-	int getSetup(MAXMIN AnlsType, Transitions Tr);
-	void setHold(MAXMIN AnlsType, Transitions Tr, int val) ;
-
-	int getHold(MAXMIN AnlsType, Transitions Tr);
+	int getHold(MAXMIN AnlsType, InOutTr Tr);
 	clockdat* getClkdat();
 
-
 };
-
-
-
-
-
-
-
-
-
 
 #endif

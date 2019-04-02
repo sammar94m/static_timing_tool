@@ -9,67 +9,44 @@ using namespace boost;
 class inputNet: public Net {
 
 public:
-	clockdat clk;
-	static clockdat* refclk;
+	PinDat Ariv;
+	int low; //clk param
+	int high; //clk param
+
 	inputNet(string name, bool isClk, slope SL_RISE, slope SL_FALL,
-			string AR_TIME, int HIGH, int LOW) :
+			string AR_TIME, int HIGH = 0, int LOW = 0) :
 			Net(name, INPUT, isClk) {
+		low = LOW;
+		high = HIGH;
 		vector<string> tmp;
 		boost::split(tmp, AR_TIME, boost::is_any_of(" \n\r"));
 		if (tmp.empty())
 			cout << "empty vec" << endl;
-
 		cout << "tmp vec:" << tmp[0] << "  " << tmp[1] << endl;
-		clk.RISE_SLOPE = SL_RISE;
-		clk.FALL_SLOPE = SL_FALL;
-		clk.high = HIGH;
-		clk.low = LOW;
-
-		int Ariv = 0;
-		if (refclk) {
-			if (tmp[1] == "AF") {
-				Ariv = atoi(tmp[0].c_str()) + this->refclk->high;
-			} else if (tmp[1] == "BF") {
-				Ariv = this->refclk->high - atoi(tmp[0].c_str());
-			} else if (tmp[1] == "AR") {
-				Ariv = atoi(tmp[0].c_str());
-			} else if (tmp[1] == "BR") {
-				Ariv = this->refclk->high + this->refclk->low - atoi(tmp[0].c_str());
+		int _Ariv = atoi(tmp[0].c_str());
+		timetag edgeref;
+		if (tmp[1] == "AF") {
+			edgeref = AF;
+		} else if (tmp[1] == "BF") {
+			edgeref = BF;
+		} else if (tmp[1] == "AR") {
+			edgeref = AR;
+		} else if (tmp[1] == "BR") {
+			edgeref = BR;
+		}
+		for (const auto i : { MAX, MIN }) {
+			for (const auto j : { FALL, RISE }) {
+				Ariv.tmp_slope[i][j] = (j == FALL) ? SL_FALL : SL_RISE;
+				Ariv.tmp_vld[i][j].val = _Ariv;
+				Ariv.tmp_vld[i][j].tag = edgeref;
+				Ariv.tmp_TR[i][j] = (j == FALL) ? FALL : RISE;
 			}
 		}
-		clk.RISE_AR = Ariv;
+		Ariv.updateWC(); //TODO: WRITE WC
 
 	}
-	load getCin(pin input) {
-		return 0;
-	}
-	virtual load getCout(output_pin out) {
-		return 0;
-	}
-	virtual delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload) {
-		if (Tr == RR || Tr == FR) {
-			return 0;
-		} else {
-			return 0;
-		}
-	}
-	virtual slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
-			Transitions Tr, slope inslope, load outload) {
-		if (Tr == RR || Tr == FR) {
-			return 0;
-		} else {
-			return 0;
-		}
-	}
-
-	static clockdat* getRefclk(){
-		return refclk;
-	}
-
-	static void setRefclk(clockdat* ref){
-
-		refclk = ref;
+	PinDat getDrvData() {
+		return Ariv;
 	}
 
 };
