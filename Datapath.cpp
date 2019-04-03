@@ -10,10 +10,9 @@ time_t resettime;
 string to_string(Tr TR) {
 	if (TR == FALL) {
 		return string("F");
-	} else if (TR == RISE) {
+	} else {
 		return string("R");
 	}
-	return string("");
 }
 
 void dataPathDelayCalc() {
@@ -23,18 +22,18 @@ void dataPathDelayCalc() {
  * mark the visited cells with time stamps
  * set ready inputs to zero
  */
-void GraphPartition(Cell& OutDriver, vector<Net*>& PrimeNet) {
+void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet) {
 	resettime = time(NULL); //reset visited status
-	std::cout << "Partioning Graph starting from Cell: " << OutDriver.name
-			<< endl;
+	std::cout << "Partioning Graph starting from Output: "
+			<< OutNet.name << endl;
 	queue<Cell*> CellQ; //used to store the discovered Cells
-	CellQ.push(&OutDriver);
+	CellQ.push(OutNet.driver.first);
 	while (!CellQ.empty()) {
 		Cell* curr = CellQ.front();
 		CellQ.pop();
 		for (auto& pair : curr->inMap) {
-			auto in_Pin=pair.first;
-			auto inNet=pair.second;
+			auto in_Pin = pair.first;
+			auto inNet = pair.second;
 			//TODO: Flipflop Data invalidation
 			if (inNet->type == INPUT) {
 				PrimeNet.push_back(inNet);
@@ -53,6 +52,7 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 	 * copy Nets to NetQ
 	 */
 	//TODO: check if FIFO
+	cout << "Starting valid propagation" << endl;
 	queue<Net*> NetQ;
 	queue<Cell*> CellQ; //ready to process
 	for (const auto& pNet : inputNetVec) {
@@ -61,16 +61,19 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 	while (!NetQ.empty() || !CellQ.empty()) {
 		while (!NetQ.empty()) {
 			Net* currNet = NetQ.front(); //pop NetQ
+			cout << "propagating through net: " << currNet->name << endl;
 			NetQ.pop();
 			PinDat Data = currNet->getDrvData(); //fetch Driver Data
 			for (auto& rcv : currNet->receivers) { //iterate over receivers
+				Cell* currCell = rcv->cell;
+				auto inPin = rcv->inPin;
+				currNet->calcRcvData(rcv, Data, inPin);
 				if (rcv->cell->visittime < resettime) {
 					continue; // Cell isn't connected to current processing output
 				} else {
-					Cell* currCell = rcv->cell;
-					auto inPin = rcv->inPin;
-					currNet->calcRcvData(rcv, Data, inPin);
 					if (currCell->isReady()) {
+						cout << "Cell: " << currCell->name << " is ready"
+								<< endl;
 						CellQ.push(currCell);
 					}
 				}
@@ -79,7 +82,7 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 		while (!CellQ.empty()) { //NetQ is empty() CellQ isn't empty
 			Cell* currCell = CellQ.front();
 			CellQ.pop();
-			currCell->CalcOutputData();/*ready_input reset to 0*/
+			currCell->CalcOutputData();/*ready_input reset to 0 visited=true*/
 			if (currCell->outNet->type == OUTPUT) {
 				std::cout << "reached output: " << currCell->outNet->name
 						<< endl;
@@ -90,4 +93,25 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 	}
 
 }
+void BackwardPropagateReq(Net& OutNet) {
+	cout << "Starting required propagation from: "<<OutNet.name << endl;
+	queue<Cell*> CellQ; //used to store the discovered Cells
+	CellQ.push(OutNet.driver.first);
+	while (!CellQ.empty()) {
+		Cell* curr = CellQ.front();
+		CellQ.pop();
+		curr->CalcInputReq();
+		for (auto& pair : curr->inMap) {
+			auto in_Pin = pair.first;
+			auto inNet = pair.second;
+			inNet->CalcDrvReq();
+			//TODO: Flipflop Data invalidation
+			if (inNet->type == INPUT) {
+				std::cout << "Reached Input: " << inNet->name << endl;
+			} else {
+				CellQ.push(inNet->driver.first);
+			}
+		}
 
+	}
+}

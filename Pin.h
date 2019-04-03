@@ -13,7 +13,7 @@ public:
 	Tr WC_TR[2][2];
 	slope WC_slope[2][2] = { INT_MIN };
 	/*Used for analysis*/
-	margin tmp[2][2];
+	margin tmp_marg[2][2];
 	required tmp_req[2][2];
 	valid tmp_vld[2][2];
 	Tr tmp_TR[2][2];

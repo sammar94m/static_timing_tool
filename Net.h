@@ -15,7 +15,6 @@ public:
 	bool isClk;
 	pair<Cell*, pin> driver; //cell* is the driver , string is the pin
 	list<receiver*> receivers; //
-	map<receiver*, clockdat> ClkArtime; //refrence clock rise
 	//--------------
 	Net(string _name, netType _type, bool _isClk) :
 			name(_name), type(_type), isClk(_isClk) {
@@ -35,8 +34,8 @@ public:
 
 	void set_driver(Cell* cell, pin pin_t);
 	void add_receiver(Cell* cell, pin pin_t);
-	void set_clkdat(clockdat& clk);
 	virtual PinDat getDrvData(); // return driver PinDat
+	virtual void CalcDrvReq();
 	/*
 	 * calculate Netdelay and slope and update reciever pin
 	 * update WC

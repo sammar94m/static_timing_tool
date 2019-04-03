@@ -24,12 +24,6 @@ int FlipFlop::getHold(MAXMIN AnlsType, InOutTr Tr) {
 
 }
 clockdat* FlipFlop::getClkdat() {
-	for (auto rcvIT = inMap["CLK"]->receivers.begin();
-			rcvIT != inMap["CLK"]->receivers.end(); ++rcvIT) {
-		if ((rcvIT.operator *())->cell == this) {
-			return &(inMap["CLK"]->ClkArtime[(rcvIT.operator *())]);
-		}
-	}
 	return NULL;
 }
 

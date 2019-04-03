@@ -34,8 +34,8 @@ void Net::set_driver(Cell* cell, pin pin_t) {
 void Net::add_receiver(Cell* cell, pin pin_t) {
 	receivers.push_front(new receiver(cell, pin_t));
 }
-void Net::set_clkdat(clockdat& clk) {
 
+void Net::CalcDrvReq() {
 }
 
 void Net::calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin) {

@@ -7,6 +7,7 @@
 #include "CellTemplate.h"
 #include "Table.h"
 #include "Pin.h"
+typedef std::pair< std::pair<MAXMIN, InOutTr> , std::pair<input_pin, output_pin> > DelCacheKey;
 class Cell {
 public:
 	cellType type;
@@ -17,8 +18,10 @@ public:
 	pin outPin;
 	map<pin, load> pinLoadMap;
 	map<pin, PinDat> PinData;
+	map<DelCacheKey, delay> DelCache;
 	time_t visittime;
 	int ready_inputs;
+	bool visited;
 public:
 	virtual ~Cell() {
 		delete Template;
@@ -30,10 +33,11 @@ public:
 		outNet = NULL;
 		visittime = time(NULL);
 		ready_inputs = 0;
+		visited=false;
 	}
 	Cell(cellType _type, string _name, CellTemplate* _Template) :
 			type(_type), name(_name), Template(_Template), outNet(NULL), visittime(
-					time(NULL)), ready_inputs(0) {
+					time(NULL)), ready_inputs(0),visited(false) {
 	}
 
 	//virtual void saveclkdat(clockdat cd){};
@@ -60,6 +64,9 @@ public:
 	int getnumofinputs() {
 		return inMap.size();
 	}
+	void CalcInputReq();
+	void CalReq(pin in, pin out, required (&inreq)[2][2],
+			const required (&outreq)[2][2]);
 };
 
 #endif

@@ -99,13 +99,13 @@ void list_command(vector<string>& vec) {
 			if (!(it->second->isClk))
 				continue;
 			cout << it->second->name << ':' << endl;
-			for (auto rcvit = it->second->ClkArtime.begin();
+			/*for (auto rcvit = it->second->ClkArtime.begin();
 					rcvit != it->second->ClkArtime.end(); ++rcvit) {
 				cout << "	" << rcvit->first->cell->name << "	" << "	"
 						<< rcvit->second.RISE_AR << "	" << rcvit->second.high
 						<< "	" << rcvit->second.low << "	" << endl;
 				;
-			}
+			}*/
 		}
 	} else if (vec[1] == "receivers") {
 		if (vec.size() < 3) {
