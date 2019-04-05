@@ -51,18 +51,14 @@ void LibraryFile(const string& filename) {
 		load LOAD;
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
-//			for (int i = 0; i < vec.size(); i++)
-//				cout << " " << vec[i];
-//			cout << endl;
 
 			if (vec.empty())
 				continue;
 
 			if (vec[0] == "CELL") {
-//				cout << "CELL" << endl;
 				cellTemplate = new CellTemplate(vec[1]);
 				if (!cellTemplate) {
-					throw "failed to alloc cellTemplate"; // << endl;
+					throw "failed to alloc cellTemplate";
 				}
 				CellTemplateTable[vec[1]] = cellTemplate;
 
@@ -84,22 +80,11 @@ void LibraryFile(const string& filename) {
 								atoi(vec[i].c_str()));
 				}
 			} else if (vec[0] == "ARC") {
-//				cout << "ARC" << endl;
 				input_pin inpin = vec[1];
 				output_pin outpin = vec[2];
-
-				//cellTemplate->delayTable[pair<input_pin, output_pin>(inpin, outpin)] = ;
-
-				//cellTemplate->slopeTable.insert(pair<input_pin, output_pin>(inpin, outpin)) = ;
-
 				while (!myfile.eof()) {
 					vec = readLine(myfile);
-//					for (int i = 0; i < vec.size(); i++)
-//						cout << " " << vec[i];
-//					cout << endl;
-
 					if (vec.empty()) {
-//						cout << "ARC reading done" << endl;
 						break;
 					}
 
@@ -107,7 +92,6 @@ void LibraryFile(const string& filename) {
 					int rows = cellTemplate->IN_SLOPE_POINTS.size();
 					int cols = cellTemplate->OUT_LOAD_POINTS.size();
 
-					//cout<<rows<<cols<<endl;
 					vector<string> tableSpec;
 					boost::split(tableSpec, vec[0], boost::is_any_of("_"));
 
@@ -137,33 +121,26 @@ void LibraryFile(const string& filename) {
 					InOutTr Tr = getInOutTr(tableSpec[3]);
 
 					if (tableSpec[0] == "DELAY") {
-//						cout << "delay table added" << endl;
 						cellTemplate->delayTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((delay**) table,
 								AnlsType, Tr, rows, cols);
 						table = NULL;
 
 					} else {
-//						cout << "slope table added" << endl;
 						cellTemplate->slopeTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((slope**) table,
 								AnlsType, Tr, rows, cols);
 						table = NULL;
 
 					}
-//					cout << "  good till now" << endl;
 				}
 
 			} else if (vec[0] == "CHECK") {
-//				cout << " ---- CHECK" << endl;
 				if (cellTemplate != NULL
 						&& cellTemplate->template_name == "FF") {
 					int i = 4;
 					while (i--) {
 						vec = readLine(myfile);
-//						for (int i = 0; i < vec.size(); i++)
-//							cout << " " << vec[i];
-//						cout << endl;
 						cellTemplate->setupdata[setupdataIndex(vec[0])] = atoi(
 								vec[1].c_str());
 					}
@@ -200,20 +177,15 @@ void DesignConstraintsFile(const string& filename) {
 
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
-//			for (int i = 0; i < vec.size(); i++)
-//				cout << " " << vec[i];
-//			cout << endl;
-
 			if (vec.empty()) { //end of cell
 
 				if (isOut == 1) {
 					net = new outputNet(name, isClk, REQ_TIME, LOAD);
 					NetsTable[name] = net;
-					//cout<<"-----"<<name<<"----"<<endl;
+					OutputTable.push_back(net);
 				} else if (isOut == 2) {
 					net = new inputNet(name, isClk, SL_RISE, SL_FALL, AR_TIME,
 							HIGH, LOW);
-					//cout<<"-----"<<name<<"----"<<endl;
 					NetsTable[name] = net;
 					InputTable.push(net);
 					if (isClk) {
@@ -236,12 +208,7 @@ void DesignConstraintsFile(const string& filename) {
 			} else if (vec[0] == "TYPE") {
 				isClk = vec[1] == "CLOCK";
 			} else if (vec[0] == "AR_TIME") {
-				for (int i = 0; i < vec.size(); ++i)
-					//	cout<< vec[i]<<" | ";
-					//cout<<endl;
-
-					AR_TIME = vec[1] + ' ' + vec[2] + ' ' + vec[3] + '\0';
-
+				AR_TIME = vec[1] + ' ' + vec[2] + ' ' + vec[3] + '\0';
 			} else if (vec[0] == "SL_RISE") {
 				SL_RISE = atoi(vec[1].c_str());
 			} else if (vec[0] == "SL_FALL") {
@@ -255,9 +222,6 @@ void DesignConstraintsFile(const string& filename) {
 			} else if (vec[0] == "LOAD") {
 				LOAD = atoi(vec[1].c_str());
 			}
-
-			//char nextChar = cin.peek(); // to check if next line is empty
-
 		}
 	}
 
@@ -313,8 +277,6 @@ void NetlistFileFormat(const string& filename) {
 						cell->inMap[vec[1]] = driverNet;
 
 					} else if (vec[0] == "OUT") {
-
-						//cout<<"  -----"<<vec[2]<<"-------"<<endl;
 						Net* outPutNet = NULL;
 						outPutNet = NetsTable.find(vec[2])->second;
 
@@ -325,7 +287,7 @@ void NetlistFileFormat(const string& filename) {
 
 						cell->outNet = outPutNet;
 						cell->outPin = vec[1];
-						outPutNet->set_driver(cell, cell->name);
+						outPutNet->set_driver(cell, vec[1]);
 					}
 				}
 			}
@@ -351,10 +313,6 @@ void ParasiticsInterconnectFile(const string& filename) {
 	if (s == "Parasitics interconnect file:") {
 		while (!myfile.eof()) {
 			vector<string> vec = readLine(myfile);
-//			for (int i = 0; i < vec.size(); i++)
-//				cout << " " << vec[i];
-//			cout << endl;
-
 			if (vec.empty()) {
 				net = NULL;
 				continue;
@@ -381,47 +339,7 @@ void ParasiticsInterconnectFile(const string& filename) {
 		}
 	}
 }
-//--------------------------------------------------------------------------------------
-/*void dfsPrintaux(Cell* cell) {
- if (!cell) {
- cout << "null cell" << endl;
- return;
- } else
- cout << "dfs start from cell " << cell->name << endl;
- //	auto outmap = cell->getOutMap();
- for (auto iter = outmap.begin(); iter != outmap.end(); ++iter) {
- cout << (*iter).first << " --> ";
- auto net = (*iter).second;
- auto rcvCells = net->receivers;
- for (auto cellIter = rcvCells.begin(); cellIter != rcvCells.end();
- ++cellIter) {
- receiver* rcv = (*cellIter);
- dfsPrintaux(rcv->cell);
- }
- }
- }*/
 
-/*void dfsPrint() {
- if (InputTable.empty()) {
- cout << "empty table " << endl;
- } else
- cout << "InputTable size = " << InputTable.size() << endl;
-
- while (!InputTable.empty()) {
- Net* net = InputTable.front();
- if (!net) {
- cout << "null net" << endl;
- break;
- }
-
- for (auto iter = net->receivers.begin(); iter != net->receivers.end();
- ++iter) {
- dfsPrintaux((*iter)->cell);
- }
-
- InputTable.pop();
- }
- }*/
 
 int setupdataIndex(string s) { // bug
 	if (s == "MAX_RR")
@@ -436,7 +354,6 @@ int setupdataIndex(string s) { // bug
 }
 
 InOutTr getInOutTr(string tr) {
-	//cout << "tr=" << tr << endl;
 	if (tr == "FF") {
 		return InOutTr::FF;
 	} else if (tr == "FR") {

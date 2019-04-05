@@ -15,9 +15,3 @@ void receiver::set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly,
 		netDely = n_dly;
 	}
 }
-
-//	void receiver::print() {
-//		cout << "receiver:" << endl;
-//		cout << "cell = " << cell->getName() << " ,inPin=" << inPin << " ,slopeDeg="
-//				<< slopeDeg << " ,netDely=" << netDely << endl;
-//	}

@@ -1,13 +1,14 @@
 #ifndef CELL_H_
 #define CELL_H_
-
+#include "netfwd.h"
 #include "enums.h"
-#include "Net.h"
 #include "Clockdat.h"
 #include "CellTemplate.h"
 #include "Table.h"
 #include "Pin.h"
+
 typedef std::pair< std::pair<MAXMIN, InOutTr> , std::pair<input_pin, output_pin> > DelCacheKey;
+
 class Cell {
 public:
 	cellType type;
@@ -22,26 +23,9 @@ public:
 	time_t visittime;
 	int ready_inputs;
 	bool visited;
-public:
-	virtual ~Cell() {
-		delete Template;
-	}
-
-	Cell() {
-		Template = NULL;
-		type = UNKNOWN;
-		outNet = NULL;
-		visittime = time(NULL);
-		ready_inputs = 0;
-		visited=false;
-	}
-	Cell(cellType _type, string _name, CellTemplate* _Template) :
-			type(_type), name(_name), Template(_Template), outNet(NULL), visittime(
-					time(NULL)), ready_inputs(0),visited(false) {
-	}
-
-	//virtual void saveclkdat(clockdat cd){};
-
+	virtual ~Cell();
+	Cell();
+	Cell(cellType _type, string _name, CellTemplate* _Template);
 	virtual load getCin(pin input);
 	const map<output_pin, Net*>& getOutMap();
 
@@ -56,14 +40,10 @@ public:
 	void updateWCdat(pin PIN, margin Margin, MAXMIN mode,
 			InOutTr Tr/*FALL OR RISE*/);
 	margin getWCdat(input_pin input, MAXMIN MODE);
-	inline bool isReady() {
-		return ready_inputs == getnumofinputs();
-	}
+	bool isReady();
 	void print();
 	void CalcOutputData();
-	int getnumofinputs() {
-		return inMap.size();
-	}
+	int getnumofinputs();
 	void CalcInputReq();
 	void CalReq(pin in, pin out, required (&inreq)[2][2],
 			const required (&outreq)[2][2]);

@@ -6,6 +6,15 @@
  */
 #include "CellTemplate.h"
 
+CellTemplate::CellTemplate(string name) :
+		template_name(name) {
+	for (int i = 0; i < 4; i++) {
+		setupdata[i] = -1;
+	}
+
+}
+CellTemplate::~CellTemplate() {
+}
 delay CellTemplate::getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
 		InOutTr Tr, slope inslope, load outload) {
 	int indslp, indld;

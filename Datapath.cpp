@@ -16,7 +16,16 @@ string to_string(Tr TR) {
 }
 
 void dataPathDelayCalc() {
-
+	vector<Net*> INNETS;
+	for (Net* O : OutputTable) {
+		if (O->driver.first == NULL) {
+			cout << O->name << " Net has no driver" << endl;
+			return;
+		}
+		GraphPartition(*O, INNETS);
+		ForwardPropagateValid(INNETS);
+		BackwardPropagateReq(*O);
+	}
 }
 /*Given a cell backward walk to primary inputs and return them in a Q
  * mark the visited cells with time stamps
@@ -24,26 +33,36 @@ void dataPathDelayCalc() {
  */
 void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet) {
 	resettime = time(NULL); //reset visited status
-	std::cout << "Partioning Graph starting from Output: "
-			<< OutNet.name << endl;
+	std::cout << "Partioning Graph starting from Output: " << OutNet.name
+			<< endl;
 	queue<Cell*> CellQ; //used to store the discovered Cells
 	CellQ.push(OutNet.driver.first);
 	while (!CellQ.empty()) {
 		Cell* curr = CellQ.front();
+		if (curr == NULL) {
+			cout << "NULL pointer to cell" << endl;
+			exit(0);
+		}
 		CellQ.pop();
+		std::cout << "Reached Cell: " << curr->name << endl;
 		for (auto& pair : curr->inMap) {
 			auto in_Pin = pair.first;
 			auto inNet = pair.second;
 			//TODO: Flipflop Data invalidation
 			if (inNet->type == INPUT) {
-				PrimeNet.push_back(inNet);
-				std::cout << "Reached Input: " << inNet->name << endl;
+				if (!((inputNet*) inNet)->visited) {
+					PrimeNet.push_back((inputNet*)inNet);
+					((inputNet*) inNet)->visited=true;
+					std::cout << "Reached Input: " << inNet->name << endl;
+				}
 			} else {
 				CellQ.push(inNet->driver.first);
 			}
+
 		}
 		curr->visittime = time(NULL);
 		curr->ready_inputs = 0;
+
 	}
 }
 
@@ -73,7 +92,7 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 				} else {
 					if (currCell->isReady()) {
 						cout << "Cell: " << currCell->name << " is ready"
-								<< endl;
+								<< " #Ready = "<<currCell->ready_inputs<<endl;
 						CellQ.push(currCell);
 					}
 				}
@@ -94,17 +113,19 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 
 }
 void BackwardPropagateReq(Net& OutNet) {
-	cout << "Starting required propagation from: "<<OutNet.name << endl;
+	cout << "Starting required propagation from: " << OutNet.name << endl;
 	queue<Cell*> CellQ; //used to store the discovered Cells
 	CellQ.push(OutNet.driver.first);
+	OutNet.CalcDrvReq(dynamic_cast<outputNet&>(OutNet).Req.tmp_req,NULL,"");
 	while (!CellQ.empty()) {
 		Cell* curr = CellQ.front();
 		CellQ.pop();
 		curr->CalcInputReq();
+		cout<<"Calculated required for Cell's "<<curr->name<<" inputs"<<endl;
 		for (auto& pair : curr->inMap) {
 			auto in_Pin = pair.first;
 			auto inNet = pair.second;
-			inNet->CalcDrvReq();
+			inNet->CalcDrvReq(curr->PinData[in_Pin].tmp_req, curr, in_Pin);
 			//TODO: Flipflop Data invalidation
 			if (inNet->type == INPUT) {
 				std::cout << "Reached Input: " << inNet->name << endl;

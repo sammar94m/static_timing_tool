@@ -16,7 +16,7 @@ map<int, string> MINpaths;
 queue<Net*> InputTable;
 queue<Net*> InputDataTable;
 queue<Net*> InputClkTable;
-
+vector<Net*> OutputTable;
 map<string, Net*> NetsTable;
 map<string, Cell*> CellsTable;
 map<string, CellTemplate*> CellTemplateTable;
@@ -28,23 +28,21 @@ map<string, CellTemplate*> CellTemplateTable;
 
  *		ParasiticsInterconnectFile.txt
  * */
-//void printCircuit() {
-//	for (auto it = CellsTable.begin(); it != CellsTable.end(); ++it) {
-//		cout << it->first << " (" << it->second->Template->template_name << ")"
-//				<< endl;
-//		for (auto pinItr = it->second->inMap.begin();
-//				pinItr != it->second->inMap.end(); ++pinItr) {
-//			cout << "IN " << pinItr->first << "(" << pinItr->second->name << ")"
-//					<< endl;
-//		}
-//		for (auto pinItr = it->second->outMap.begin();
-//				pinItr != it->second->outMap.end(); ++pinItr) {
-//			cout << "OUT " << pinItr->first << "(" << pinItr->second->name
-//					<< ")" << endl;
-//		}
-//		cout << endl;
-//	}
-//}
+void printCircuit() {
+	for (auto it = CellsTable.begin(); it != CellsTable.end(); ++it) {
+		cout << it->first << " (" << it->second->Template->template_name << ")"
+				<< endl;
+		for (auto pinItr = it->second->inMap.begin();
+				pinItr != it->second->inMap.end(); ++pinItr) {
+			cout << "IN " << pinItr->first << "(" << pinItr->second->name << ")"
+					<< endl;
+		}
+		cout << "OUT " << it->second->outPin << "(" << it->second->outNet->name
+				<< ")" << endl;
+
+		cout << endl;
+	}
+}
 void list_command(vector<string>& vec) {
 	if (vec[1] == "cells") {
 		cout << "..." << endl;
@@ -53,10 +51,10 @@ void list_command(vector<string>& vec) {
 		}
 	} else if (vec[1] == "nets") {
 		cout << "..." << endl;
-		cout << "Name " << "Type " << "isClock" << endl;
-		for (auto it = NetsTable.begin(); it != NetsTable.end(); ++it) {
-			cout << it->first << " ";
-			switch (it->second->type) {
+		cout << "Name " << "Type " << "isClock " << "Driver" << endl;
+		for (auto& it : NetsTable) {
+			cout << it.first << " ";
+			switch (it.second->type) {
 			case LOCAL:
 				cout << "LOCAL";
 				break;
@@ -68,12 +66,16 @@ void list_command(vector<string>& vec) {
 				break;
 
 			}
-			if (it->second->isClk) {
+			if (it.second->isClk) {
 				cout << " CLK";
 			} else {
 				cout << " DATA";
 			}
-			cout << endl;
+			if (it.second->driver.first == NULL) {
+				cout << " NULL" << endl;
+			} else {
+				cout << " " << it.second->driver.first->name << endl;
+			}
 
 		}
 	} else if (vec[1] == "input") {
@@ -83,6 +85,32 @@ void list_command(vector<string>& vec) {
 		// InputClkTable;
 	} else if (vec[1] == "output") {
 		cout << "..." << endl;
+		cout << "Name " << "Type " << "isClock " << "Driver" << endl;
+		for (auto& it : OutputTable) {
+			cout << it->name << " ";
+			switch (it->type) {
+			case LOCAL:
+				cout << "LOCAL";
+				break;
+			case INPUT:
+				cout << "INPUT";
+				break;
+			case OUTPUT:
+				cout << "OUTPUT";
+				break;
+
+			}
+			if (it->isClk) {
+				cout << " CLK";
+			} else {
+				cout << " DATA";
+			}
+			if (it->driver.first == NULL) {
+				cout << " NULL" << endl;
+			} else {
+				cout << " " << it->driver.first->name << endl;
+			}
+		}
 
 	} else if (vec[1] == "templates") {
 		cout << "..." << endl;
@@ -98,14 +126,7 @@ void list_command(vector<string>& vec) {
 		for (auto it = NetsTable.begin(); it != NetsTable.end(); ++it) {
 			if (!(it->second->isClk))
 				continue;
-			cout << it->second->name << ':' << endl;
-			/*for (auto rcvit = it->second->ClkArtime.begin();
-					rcvit != it->second->ClkArtime.end(); ++rcvit) {
-				cout << "	" << rcvit->first->cell->name << "	" << "	"
-						<< rcvit->second.RISE_AR << "	" << rcvit->second.high
-						<< "	" << rcvit->second.low << "	" << endl;
-				;
-			}*/
+			cout << it->second->name << endl;
 		}
 	} else if (vec[1] == "receivers") {
 		if (vec.size() < 3) {
@@ -138,7 +159,19 @@ void print_command(vector<string>& vec) {
 
 	} else if (vec[1] == "circuit") {
 		cout << "..." << endl;
-//		printCircuit();
+		printCircuit();
+	} else if (vec[1] == "cell") {
+		cout << "..." << endl;
+		if (vec.size() < 3) {
+			cout << "Enter cell name" << endl;
+		}else{
+			Cell* pCell=CellsTable[vec[2]];
+			for(auto& i : pCell->PinData){
+				cout<<"Pin "<<i.first<<endl;
+				i.second.Print();
+
+			}
+		}
 	} else {
 		cout << "what?!" << endl;
 
@@ -182,37 +215,18 @@ void startShellCommands() {
 }
 
 int main(int argc, char* argv[]) {
-
-	cout << " reading LibraryFile" << endl;
-	LibraryFile("LibraryFile.txt");
-	cout << " LibraryFile done" << endl;
-//	cout
-//			<< "-----------------------------------------------------------------------"
-//			<< endl;
-//
-//	for (auto it = CellTemplateTable.begin(); it != CellTemplateTable.end();
-//			++it) {
-//		cout << it->first << " : " << endl;
-//		it->second->print();
-//	}
-
-	cout << " reading DesignConstraintsFile" << endl;
-	DesignConstraintsFile("DesignConstraintsFile.txt");
-	cout << "  DesignConstraintsFile done" << endl;
+	cout << "Reading LibraryFile" << endl;
+	LibraryFile("LibraryFile2.txt");
+	cout << "LibraryFile done" << endl;
+	cout << "Reading DesignConstraintsFile" << endl;
+	DesignConstraintsFile("DesignConstraintsFile2.txt");
+	cout << "DesignConstraintsFile done" << endl;
+	cout << "Reading NetlistFileFormat" << endl;
+	NetlistFileFormat("NetlistFileFormat2.txt");
+	cout << "NetlistFileFormat done " << endl;
 	cout
 			<< "-----------------------------------------------------------------------"
 			<< endl;
-
-//		for (auto it = NetsTable.begin(); it != NetsTable.end();++it) {
-//			cout << it->first << " : " << endl;
-//			it->second->print();
-//		}
-
-	cout << " reading NetlistFileFormat" << endl;
-	NetlistFileFormat("NetlistFileFormat.txt");
-	cout << " NetlistFileFormat done " << endl;
-
-//dfsPrint();
 	startShellCommands();
 	return 0;
 }

@@ -23,14 +23,20 @@ public:
 			for (const auto j : { FALL, RISE }) {
 				WC_REQ[i][j].val = (i == MAX) ? INT_MAX : INT_MIN;
 				WC_VLD[i][j].val = (i == MAX) ? INT_MIN : INT_MAX;
+				tmp_req[i][j].val = (i == MAX) ? INT_MAX : INT_MIN;
+				tmp_vld[i][j].val = (i == MAX) ? INT_MIN : INT_MAX;
 			}
 		}
-
 	}
 	void updateWC() {
-
 	}
 	;
+	void Print(){
+		std::cout<<"tmp_marg="<<'{'<<to_string(tmp_marg[0][0])<<','<<to_string(tmp_marg[0][1])<<','<<to_string(tmp_marg[1][0])<<','<<to_string(tmp_marg[1][1])<<'}'<<endl;
+		std::cout<<"tmp_req="<<'{'<<to_string(tmp_req[0][0].val)<<','<<to_string(tmp_req[0][1].val)<<','<<to_string(tmp_req[1][0].val)<<','<<to_string(tmp_req[1][1].val)<<'}'<<endl;
+		std::cout<<"tmp_vld="<<'{'<<to_string(tmp_vld[0][0].val)<<','<<to_string(tmp_vld[0][1].val)<<','<<to_string(tmp_vld[1][0].val)<<','<<to_string(tmp_vld[1][1].val)<<'}'<<endl;
+
+	}
 };
 
 #endif

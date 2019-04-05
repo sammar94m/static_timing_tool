@@ -6,6 +6,29 @@
  */
 
 #include "Cell.h"
+#include "Net.h"
+
+Cell::Cell() {
+	Template = NULL;
+	type = UNKNOWN;
+	outNet = NULL;
+	visittime = time(NULL);
+	ready_inputs = 0;
+	visited = false;
+}
+Cell::Cell(cellType _type, string _name, CellTemplate* _Template) :
+		type(_type), name(_name), Template(_Template), outNet(NULL), visittime(
+				time(NULL)), ready_inputs(0), visited(false) {
+}
+Cell::~Cell() {
+	delete Template;
+}
+int Cell::getnumofinputs() {
+	return inMap.size();
+}
+bool Cell::isReady() {
+	return ready_inputs == getnumofinputs();
+}
 
 load Cell::getCin(pin input) {
 	return Template->temp_pinLoadMap[input];
@@ -35,14 +58,15 @@ string Cell::getName() {
 delay Cell::getDelay(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 		slope inslope, load outload) {
 	//TODO: check if its possible transition
-	delay res = Template->getDelay(in, out, AnlsType, Tr, inslope, outload);
+	delay res = 1 + (AnlsType==MAX); //Template->getDelay(in, out, AnlsType, Tr, inslope, outload);
 	DelCacheKey key(std::pair(std::pair(AnlsType, Tr), std::pair(in, out)));
 	DelCache[key] = res;
 	return res;
 }
 slope Cell::getSlope(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 		slope inslope, load outload) {
-	return Template->getSlope(in, out, AnlsType, Tr, inslope, outload);
+//	return Template->getSlope(in, out, AnlsType, Tr, inslope, outload);
+	return 1;
 }
 bool Cell::PossiblTr(input_pin in, output_pin out, InOutTr Tr) {
 	int Poss = this->Template->delayTable[make_pair(in, out)].GetTableVal(MAX,
@@ -73,7 +97,6 @@ void Cell::CalcOutputData() {
 	 */
 	for (auto& pair : inMap) {
 		auto in_Pin = pair.first;
-		auto inNet = pair.second;
 		for (const auto i : { MIN, MAX }) {
 			for (const auto j : { FALL, RISE }) { //output transition
 				for (const auto q : { FALL, RISE }) { // input transition
@@ -83,6 +106,7 @@ void Cell::CalcOutputData() {
 					tmp_del = getDelay(in_Pin, outPin, i, ioTr, tmp_slp,
 							getCout(outPin));
 					tmp_del += PinData[in_Pin].tmp_vld[i][q].val;
+					//std::cout<<name<<": Pin: "<<in_Pin<<": tmp del="<<tmp_del<<" i,q="<<i<<q<<endl;
 					if (i == MAX) {
 						if (tmp_del > Dat.tmp_vld[i][j].val) {
 							Dat.tmp_vld[i][j].val = tmp_del;
@@ -96,38 +120,35 @@ void Cell::CalcOutputData() {
 						}
 						Dat.tmp_slope[i][j] = min(tmp_slp, Dat.tmp_slope[i][j]);
 					}
-
 				}
 			}
 		}
 	}
 	Dat.updateWC();
 	ready_inputs = 0;
-	visited=true;
+	visited = true;
 }
 void Cell::CalcInputReq() {
 	const PinDat& Dat = PinData[outPin];
-
-	required tmp;
 	for (auto& pair : PinData) {
-		auto in_Pin = pair.first;
-		auto inDat = pair.second;
+		auto& in_Pin = pair.first;
+		auto& inDat = pair.second;
 		if (in_Pin == outPin)
 			continue;
-		CalReq(in_Pin,outPin,inDat.tmp_req,Dat.tmp_req);
+		CalReq(in_Pin, outPin, inDat.tmp_req, Dat.tmp_req);
 		inDat.updateWC();
 	}
 }
 void Cell::CalReq(pin in, pin out, required (&inreq)[2][2],
 		const required (&outreq)[2][2]) {
 	//FALL = 0 Rise = 1
-	const InOutTr inouttr[2][2] = { FR, FF, RF, RR };
 	DelCacheKey key;
 	delay tmp[2][4];/*Mode/TR*/
 	//fetch delay
 	for (int i = 0; i < 2; i++) {
 		for (int j = 0; j < 4; j++) {
-			key = DelCacheKey(std::make_pair((MAXMIN)i, (InOutTr)j), std::make_pair(in, out));
+			key = DelCacheKey(std::make_pair((MAXMIN) i, (InOutTr) j),
+					std::make_pair(in, out));
 			tmp[i][j] = DelCache[key]; //TODO: fix missing tr
 		}
 	}

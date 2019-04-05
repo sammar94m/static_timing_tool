@@ -9,9 +9,9 @@
 #define CREATENETLIST_H_
 
 #include "Cell.h"
-#include "Net.h"
 #include "OutputNet.h"
 #include "InputNet.h"
+#include "Net.h"
 #include "enums.h"
 
 #define BUFFZISE 1024
@@ -24,7 +24,7 @@ extern map<int, string> MINpaths;
 extern queue<Net*> InputTable;
 extern queue<Net*> InputDataTable;
 extern queue<Net*> InputClkTable;
-
+extern vector<Net*> OutputTable;
 extern map<string, Net*> NetsTable;
 extern map<string, Cell*> CellsTable;
 extern map<string, CellTemplate*> CellTemplateTable;

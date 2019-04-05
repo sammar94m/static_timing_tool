@@ -14,17 +14,8 @@ public:
 	vector<load> OUT_LOAD_POINTS;
 	int setupdata[4]; //
 	string template_name;
-
-	CellTemplate(string name) :
-			template_name(name) {
-		for (int i = 0; i < 4; i++) {
-			setupdata[i] = -1;
-		}
-
-	}
-	virtual ~CellTemplate() {
-	}
-
+	CellTemplate(string name);
+	virtual ~CellTemplate();
 	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 			slope inslope, load outload);
 	delay getSlope(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,

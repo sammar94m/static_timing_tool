@@ -1,7 +1,6 @@
 #ifndef INPUTNET_H_
 #define INPUTNET_H_
 
-#include "enums.h"
 #include "Net.h"
 
 using namespace boost;
@@ -12,17 +11,15 @@ public:
 	PinDat Ariv;
 	int low; //clk param
 	int high; //clk param
-
+	bool visited;
 	inputNet(string name, bool isClk, slope SL_RISE, slope SL_FALL,
 			string AR_TIME, int HIGH = 0, int LOW = 0) :
 			Net(name, INPUT, isClk) {
 		low = LOW;
 		high = HIGH;
+		visited=false;
 		vector<string> tmp;
 		boost::split(tmp, AR_TIME, boost::is_any_of(" \n\r"));
-		if (tmp.empty())
-			cout << "empty vec" << endl;
-		cout << "tmp vec:" << tmp[0] << "  " << tmp[1] << endl;
 		int _Ariv = atoi(tmp[0].c_str());
 		timetag edgeref;
 		if (tmp[1] == "AF") {
@@ -45,6 +42,7 @@ public:
 		Ariv.updateWC(); //TODO: WRITE WC
 
 	}
+	void CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin);
 	PinDat getDrvData() {
 		return Ariv;
 	}
