@@ -31,11 +31,39 @@ public:
 	void updateWC() {
 	}
 	;
-	void Print(){
-		std::cout<<"tmp_marg="<<'{'<<to_string(tmp_marg[0][0])<<','<<to_string(tmp_marg[0][1])<<','<<to_string(tmp_marg[1][0])<<','<<to_string(tmp_marg[1][1])<<'}'<<endl;
-		std::cout<<"tmp_req="<<'{'<<to_string(tmp_req[0][0].val)<<','<<to_string(tmp_req[0][1].val)<<','<<to_string(tmp_req[1][0].val)<<','<<to_string(tmp_req[1][1].val)<<'}'<<endl;
-		std::cout<<"tmp_vld="<<'{'<<to_string(tmp_vld[0][0].val)<<','<<to_string(tmp_vld[0][1].val)<<','<<to_string(tmp_vld[1][0].val)<<','<<to_string(tmp_vld[1][1].val)<<'}'<<endl;
+	void Print() {
+		std::cout << "tmp_marg=" << '{' << to_string(tmp_marg[0][0]) << ','
+				<< to_string(tmp_marg[0][1]) << ',' << to_string(tmp_marg[1][0])
+				<< ',' << to_string(tmp_marg[1][1]) << '}' << endl;
+		std::cout << "tmp_req=" << '{' << to_string(tmp_req[0][0].val) << ','
+				<< to_string(tmp_req[0][1].val) << ','
+				<< to_string(tmp_req[1][0].val) << ','
+				<< to_string(tmp_req[1][1].val) << '}' << endl;
+		std::cout << "tmp_vld=" << '{' << to_string(tmp_vld[0][0].val) << ','
+				<< to_string(tmp_vld[0][1].val) << ','
+				<< to_string(tmp_vld[1][0].val) << ','
+				<< to_string(tmp_vld[1][1].val) << '}' << endl;
 
+	}
+	void resetReq() {
+		for (const auto i : { MAX, MIN }) {
+			for (const auto j : { FALL, RISE }) {
+				tmp_req[i][j].val = (i == MAX) ? INT_MAX : INT_MIN;
+			}
+		}
+	}
+	margin GetWCTmpMarg(MAXMIN M) {
+		return min(tmp_marg[M][FALL], tmp_marg[M][RISE]);
+	}
+	Tr GETWCTrTmp(MAXMIN M) {
+		return tmp_marg[M][FALL] > tmp_marg[M][RISE] ? RISE : FALL;
+	}
+	void CalcTmpMarg() {
+		for (auto& i : { FALL, RISE }) {
+			tmp_marg[MAX][i] = tmp_req[MAX][i].val - tmp_vld[MAX][i].val;
+			tmp_marg[MIN][i] = tmp_vld[MIN][i].val - tmp_req[MIN][i].val;
+
+		}
 	}
 };
 

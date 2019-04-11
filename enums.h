@@ -25,6 +25,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <time.h>
+#include "netfwd.h"
 
 using namespace std;
 
@@ -39,10 +40,7 @@ typedef std::string input_pin;
 typedef std::string output_pin;
 typedef std::string pin;
 
-//global
-extern int pathidmax, pathidmin;
-extern map<int, string> MAXpaths;
-extern map<int, string> MINpaths;
+
 typedef enum Timetag_ {
 	BF, BR, AF, AR
 } timetag;
@@ -75,6 +73,13 @@ enum FlopSetup {
 typedef enum _netType {
 	LOCAL, INPUT, OUTPUT
 } netType;
+//global
+extern map<int, string> MAXpaths;
+extern map<int, string> MINpaths;
+extern queue<Net*> InputDataTable;
+extern vector<Net*> OutputTable;
+extern unsigned int numofpaths;
+extern time_t resettime;
 
 #endif
 

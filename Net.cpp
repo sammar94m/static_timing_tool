@@ -6,6 +6,7 @@
  */
 #include "Net.h"
 #include "Cell.h"
+
 Net::Net(string _name, netType _type, bool _isClk) :
 		name(_name), type(_type), isClk(_isClk) {
 }
@@ -58,13 +59,16 @@ void Net::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin) {
 	} else {
 		//TODO: fix for fanout
 		delay del = getRcvDelay(rcv, rcvpin);
-		for (int i = 0; i < 2; i++) {
-			for (int j = 0; j < 2; j++) {
-				driver.first->PinData[driver.second].tmp_req[i][j] =
-						rcvreq[i][j];
-				driver.first->PinData[driver.second].tmp_req[i][j].val -= del;
-			}
+		int tmp[2];
+		for (int j = 0; j < 2; j++) {
+			tmp[MAX] = driver.first->PinData[driver.second].tmp_req[MAX][j].val;
+			tmp[MIN] = driver.first->PinData[driver.second].tmp_req[MIN][j].val;
+			driver.first->PinData[driver.second].tmp_req[MAX][j].val = min(
+					tmp[MAX], rcvreq[MAX][j].val - del);
+			driver.first->PinData[driver.second].tmp_req[MIN][j].val = max(
+					tmp[MIN], rcvreq[MIN][j].val - del);
 		}
+		driver.first->PinData[driver.second].CalcTmpMarg();
 		driver.first->PinData[driver.second].updateWC();
 	}
 
@@ -88,4 +92,37 @@ void Net::calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin) {
 }
 PinDat Net::getDrvData() {
 	return this->driver.first->PinData[this->driver.second];
+}
+Tr state;
+MAXMIN M;
+bool CompPRcv(receiver* lhs, receiver* rhs) {
+	return rhs->cell->PinData[lhs->inPin].GetWCTmpMarg(M)
+			< rhs->cell->PinData[lhs->inPin].GetWCTmpMarg(M);
+}
+list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
+	list<receiver*>::iterator j;
+	list<receiver*> tmp;
+	M = MODE;
+	for (auto& i : this->receivers) {
+		if (i->cell->visittime > resettime) {
+			tmp.push_back(i);
+		}
+	}
+	tmp.sort(CompPRcv);
+	j = find(this->receivers.begin(), this->receivers.end(), tmp.front());
+	return j;
+}
+
+void Net::RecordBS(path_vec::iterator PA, list<receiver*>::iterator ref,
+		margin refm, PriorityQ& BS, MAXMIN MODE, Tr state) {
+	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
+	for (auto i=this->receivers.begin();i!=this->receivers.end();i++) {
+		if (*ref != *i && (*i)->cell->visittime > resettime) {
+			margin tmp=refmarg-(*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state];
+			if (tmp > 0)
+				continue;
+			branchslack bs(PA,tmp,refm,i);
+			BS.Add(bs);
+		}
+	}
 }

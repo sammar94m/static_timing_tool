@@ -6,6 +6,7 @@
 #include "CellTemplate.h"
 #include "Table.h"
 #include "Pin.h"
+#include "path.h"
 
 typedef std::pair< std::pair<MAXMIN, InOutTr> , std::pair<input_pin, output_pin> > DelCacheKey;
 
@@ -23,6 +24,7 @@ public:
 	time_t visittime;
 	int ready_inputs;
 	bool visited;
+	bool isCrit[2]={false,false};
 	virtual ~Cell();
 	Cell();
 	Cell(cellType _type, string _name, CellTemplate* _Template);
@@ -44,9 +46,12 @@ public:
 	void print();
 	void CalcOutputData();
 	int getnumofinputs();
+	void resetReq();
 	void CalcInputReq();
+	void RecordBS(PriorityQ& Q, MAXMIN M);
 	void CalReq(pin in, pin out, required (&inreq)[2][2],
 			const required (&outreq)[2][2]);
+	pin getWCpin(MAXMIN);
 };
 
 #endif

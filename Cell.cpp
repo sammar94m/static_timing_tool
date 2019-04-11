@@ -58,7 +58,7 @@ string Cell::getName() {
 delay Cell::getDelay(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 		slope inslope, load outload) {
 	//TODO: check if its possible transition
-	delay res = 1 + (AnlsType==MAX); //Template->getDelay(in, out, AnlsType, Tr, inslope, outload);
+	delay res = 1 + (AnlsType == MAX); //Template->getDelay(in, out, AnlsType, Tr, inslope, outload);
 	DelCacheKey key(std::pair(std::pair(AnlsType, Tr), std::pair(in, out)));
 	DelCache[key] = res;
 	return res;
@@ -69,9 +69,9 @@ slope Cell::getSlope(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 	return 1;
 }
 bool Cell::PossiblTr(input_pin in, output_pin out, InOutTr Tr) {
-	int Poss = this->Template->delayTable[make_pair(in, out)].GetTableVal(MAX,
-			Tr, 0, 0);
-	return Poss == -1 ? false : true;
+//	int Poss = this->Template->delayTable[make_pair(in, out)].GetTableVal(MAX,
+//			Tr, 0, 0);
+	return ((Tr == RR) || (Tr == FF)) ? false : true;
 }
 InOutTr GetInOut(Tr in, Tr out) {
 	if (in == RISE) {
@@ -101,12 +101,17 @@ void Cell::CalcOutputData() {
 			for (const auto j : { FALL, RISE }) { //output transition
 				for (const auto q : { FALL, RISE }) { // input transition
 					InOutTr ioTr = GetInOut(q, j);
+					if (!PossiblTr(in_Pin, outPin, ioTr)) {
+						continue;
+					}
 					tmp_slp = getSlope(in_Pin, outPin, i, ioTr,
 							PinData[in_Pin].tmp_slope[i][q], getCout(outPin));
 					tmp_del = getDelay(in_Pin, outPin, i, ioTr, tmp_slp,
 							getCout(outPin));
 					tmp_del += PinData[in_Pin].tmp_vld[i][q].val;
-					//std::cout<<name<<": Pin: "<<in_Pin<<": tmp del="<<tmp_del<<" i,q="<<i<<q<<endl;
+					std::cout << name << ": Pin: " << in_Pin << ": tmp del="
+							<< tmp_del << " mode,TR=" << i << " " << q << j
+							<< endl;
 					if (i == MAX) {
 						if (tmp_del > Dat.tmp_vld[i][j].val) {
 							Dat.tmp_vld[i][j].val = tmp_del;
@@ -136,6 +141,7 @@ void Cell::CalcInputReq() {
 		if (in_Pin == outPin)
 			continue;
 		CalReq(in_Pin, outPin, inDat.tmp_req, Dat.tmp_req);
+		inDat.CalcTmpMarg();
 		inDat.updateWC();
 	}
 }
@@ -152,18 +158,23 @@ void Cell::CalReq(pin in, pin out, required (&inreq)[2][2],
 			tmp[i][j] = DelCache[key]; //TODO: fix missing tr
 		}
 	}
-	/*MAX*/
-	inreq[MAX][FALL].val = min(outreq[MAX][FALL].val - tmp[MAX][FF],
-			outreq[MAX][RISE].val - tmp[MAX][FR]);
-	inreq[MAX][RISE].val = min(outreq[MAX][FALL].val - tmp[MAX][RF],
-			outreq[MAX][RISE].val - tmp[MAX][RR]);
-	/*MIN*/
-	inreq[MIN][FALL].val = max(outreq[MIN][FALL].val - tmp[MIN][FF],
-			outreq[MIN][RISE].val - tmp[MIN][FR]);
-	inreq[MIN][RISE].val = max(outreq[MIN][FALL].val - tmp[MIN][RF],
-			outreq[MIN][RISE].val - tmp[MIN][RR]);
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 2; j++) {
+	int tmp_req[2][2] = { INT_MIN, INT_MIN, INT_MAX, INT_MAX };
+	for (const auto j : { FALL, RISE }) { //output transition
+		for (const auto q : { FALL, RISE }) { // input transition
+			InOutTr ioTr = GetInOut(q, j);
+			if (!PossiblTr(in, outPin, ioTr)) {
+				continue;
+			}
+			tmp_req[MAX][j] = min(tmp_req[MAX][j],
+					outreq[MAX][q].val - tmp[MAX][ioTr]);
+			tmp_req[MIN][j] = max(tmp_req[MIN][j],
+					outreq[MIN][q].val - tmp[MIN][ioTr]);
+		}
+	}
+
+	for (const auto i : { MIN, MAX }) {
+		for (const auto j : { FALL, RISE }) {
+			inreq[i][j].val = tmp_req[i][j];
 			inreq[i][j].tag = outreq[i][j].tag;
 		}
 	}
@@ -176,3 +187,25 @@ void Cell::print() {
 	}
 }
 
+void Cell::resetReq() {
+	for (auto m : PinData) {
+		m.second.resetReq();
+	}
+}
+
+void Cell::RecordBS(PriorityQ& Q, MAXMIN M) {
+}
+
+pin Cell::getWCpin(MAXMIN M) {
+	int tmp = INT_MAX;
+	pin p;
+	for (auto i : PinData) {
+		auto& pinTime = i.second;
+		if (pinTime.GetWCTmpMarg(M) < tmp) {
+			tmp = pinTime.GetWCTmpMarg(M);
+			p = i.first;
+		}
+
+	}
+	return p;
+}

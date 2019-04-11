@@ -15,8 +15,7 @@
 #include "Cell.h"
 #include "InputNet.h"
 #include "OutputNet.h"
-extern queue<Net*> InputDataTable;
-extern vector<Net*> OutputTable;
+#include "path.h"
 using namespace std;
 
 void dataPathDelayCalc();

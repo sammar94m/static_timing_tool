@@ -5,8 +5,12 @@
  *      Author: Saeed
  */
 #include "Datapath.h"
-time_t resettime;
 
+time_t resettime;
+vector<MAX_PATH> MAXP;
+vector<MIN_PATH> MINP;
+int MAX_PATH::counter = 0;
+int MIN_PATH::counter = 0;
 string to_string(Tr TR) {
 	if (TR == FALL) {
 		return string("F");
@@ -17,6 +21,9 @@ string to_string(Tr TR) {
 
 void dataPathDelayCalc() {
 	vector<Net*> INNETS;
+	MAX_PATH MAX_P(0);
+	MIN_PATH MIN_P(0);
+	PriorityQ PQ(0);
 	for (Net* O : OutputTable) {
 		if (O->driver.first == NULL) {
 			cout << O->name << " Net has no driver" << endl;
@@ -45,14 +52,15 @@ void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet) {
 		}
 		CellQ.pop();
 		std::cout << "Reached Cell: " << curr->name << endl;
+		curr->resetReq();
 		for (auto& pair : curr->inMap) {
 			auto in_Pin = pair.first;
 			auto inNet = pair.second;
 			//TODO: Flipflop Data invalidation
 			if (inNet->type == INPUT) {
 				if (!((inputNet*) inNet)->visited) {
-					PrimeNet.push_back((inputNet*)inNet);
-					((inputNet*) inNet)->visited=true;
+					PrimeNet.push_back((inputNet*) inNet);
+					((inputNet*) inNet)->visited = true;
 					std::cout << "Reached Input: " << inNet->name << endl;
 				}
 			} else {
@@ -70,7 +78,6 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 	/*
 	 * copy Nets to NetQ
 	 */
-	//TODO: check if FIFO
 	cout << "Starting valid propagation" << endl;
 	queue<Net*> NetQ;
 	queue<Cell*> CellQ; //ready to process
@@ -92,7 +99,8 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 				} else {
 					if (currCell->isReady()) {
 						cout << "Cell: " << currCell->name << " is ready"
-								<< " #Ready = "<<currCell->ready_inputs<<endl;
+								<< " #Ready = " << currCell->ready_inputs
+								<< endl;
 						CellQ.push(currCell);
 					}
 				}
@@ -112,16 +120,30 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 	}
 
 }
+void PushNet(Net& net, _PATH* PATH, MAXMIN M) {
+	N_NODE* pNetNode = new N_NODE(new Net(net));
+	PATH->vec.push_back((_NODE*) pNetNode);
+}
+void PushCellandInOutPin(Cell& cell, pin inp,pin outp, _PATH* PATH, MAXMIN M) {
+	P_NODE* pPinNode = new P_NODE(inp, cell.PinData[inp]);
+	PATH->vec.push_back((_NODE*) pPinNode);
+	C_NODE* pCellNode = new C_NODE(new Cell(cell));
+	PATH->vec.push_back((_NODE*) pCellNode);
+	pPinNode = new P_NODE(outp, cell.PinData[outp]);
+	PATH->vec.push_back((_NODE*) pPinNode);
+}
 void BackwardPropagateReq(Net& OutNet) {
 	cout << "Starting required propagation from: " << OutNet.name << endl;
 	queue<Cell*> CellQ; //used to store the discovered Cells
 	CellQ.push(OutNet.driver.first);
-	OutNet.CalcDrvReq(dynamic_cast<outputNet&>(OutNet).Req.tmp_req,NULL,"");
+	OutNet.CalcDrvReq(dynamic_cast<outputNet&>(OutNet).Req.tmp_req, NULL, ""); //TODO: GET RID OF DYNAMIC CAST
+
 	while (!CellQ.empty()) {
 		Cell* curr = CellQ.front();
 		CellQ.pop();
 		curr->CalcInputReq();
-		cout<<"Calculated required for Cell's "<<curr->name<<" inputs"<<endl;
+		cout << "Calculated required for Cell's " << curr->name << " inputs"
+				<< endl;
 		for (auto& pair : curr->inMap) {
 			auto in_Pin = pair.first;
 			auto inNet = pair.second;
@@ -134,5 +156,58 @@ void BackwardPropagateReq(Net& OutNet) {
 			}
 		}
 
+	}
+}
+MAXMIN GLOBM = MAX;
+
+bool CompInNets(Net* lhs, Net* rhs) {
+	/*implement <
+	 *
+	 */
+
+	return ((inputNet*) lhs)->Ariv.GetWCTmpMarg(GLOBM)
+			< ((inputNet*) lhs)->Ariv.GetWCTmpMarg(GLOBM);
+}
+void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
+		MAXMIN M,PriorityQ& BS) {
+	GLOBM = M;
+	margin maxdiscovered = INT_MIN;
+	unsigned int numPath = 0;
+	unsigned int numbranch = 0;
+	vector<Net*> pNetVec = inputNetVec;
+	sort(pNetVec.begin(), pNetVec.end(), CompInNets);
+	for (auto inNet : pNetVec) {
+		queue<Net*> pNetQ;
+		if (((inputNet*) inNet)->Ariv.GetWCTmpMarg(M) > maxdiscovered
+				&& numofpaths > numPath+numbranch)
+			return;
+		//init critical path
+		margin PATHMARG = ((inputNet*) inNet)->Ariv.GetWCTmpMarg(M);
+		maxdiscovered=max(maxdiscovered,PATHMARG);
+		_PATH* PA;
+		if (M == MAX) {
+			PA = new MAX_PATH(PATHMARG);
+		} else {
+			PA = new MIN_PATH(PATHMARG);
+		}
+		numPath++;
+		pPATHvec.push_back(PA);
+		pNetQ.push(inNet);
+		while (!pNetQ.empty()) {
+			Net* pN=pNetQ.front();
+			pNetQ.pop();
+			PushNet(*pN,PA,M);
+			if(pN->type!=OUTPUT){
+				auto Rcvit=pN->getCritReciever(M);
+				Tr tr=(*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
+				auto vecIT=PA->vec.end();
+				vecIT--;
+				pN->RecordBS(vecIT,Rcvit,PATHMARG,BS,M,tr);
+				PushCellandInOutPin(*((*Rcvit)->cell),(*Rcvit)->inPin,(*Rcvit)->cell->outPin,PA,M);
+				numbranch=BS.getSize();
+				maxdiscovered=max(maxdiscovered,BS.GetMAX());
+				pNetQ.push((*Rcvit)->cell->outNet);
+			}
+		}
 	}
 }

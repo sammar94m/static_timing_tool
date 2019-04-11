@@ -5,6 +5,7 @@
 #include "Receiver.h"
 #include "Clockdat.h"
 #include "Pin.h"
+#include "path.h"
 
 class Net {
 public:
@@ -32,6 +33,8 @@ public:
 	 */
 	void calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin);
 	//virtual void print();
+	list<receiver*>::iterator getCritReciever(MAXMIN MODE);
+	void RecordBS(path_vec::iterator PA,list<receiver*>::iterator ref,margin refmarg,PriorityQ& BS,MAXMIN MODE,Tr state);
 };
 
 #endif
