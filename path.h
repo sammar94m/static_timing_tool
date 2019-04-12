@@ -89,10 +89,8 @@ public:
 	margin _slackofpath;
 	margin _diffslack;
 	list<receiver*>::iterator _prcv;
-	branchslack(path_vec::iterator& it, margin diffslack, margin slack, list<receiver*>::iterator& p) :
-			_it(it), _slackofpath(slack), _diffslack(diffslack), _prcv(p) {
-	}
-	;
+	branchslack(path_vec::iterator& it, margin diffslack, margin slack,
+			list<receiver*>::iterator& p);
 	bool operator <(const branchslack& rhs) const {
 		return this->_slackofpath - this->_diffslack
 				< rhs._slackofpath - rhs._diffslack; // max heap
@@ -115,12 +113,16 @@ public:
 			PQ.push(bs);
 		}
 	}
-	margin GetMAX(){
-		auto& up =PQ.top();
-		return up._slackofpath - up._diffslack;
+	margin GetMAX() {
+		if (PQ.empty()) {
+			return INT_MIN;
+		} else {
+			auto& up = PQ.top();
+			return up._slackofpath - up._diffslack;
 
+		}
 	}
-	int getSize(){
+	int getSize() {
 		return PQ.size();
 	}
 };

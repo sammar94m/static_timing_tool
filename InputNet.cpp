@@ -11,12 +11,16 @@ void inputNet::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin)
 		cout << "INPUTNET::CALCDRVREQ : error rcv = NULL" << endl;
 	}else{
 		delay del =getRcvDelay(rcv,rcvpin);
-		for(int i=0;i<2;i++){
-			for(int j=0; j<2; j++){
-				Ariv.tmp_req[i][j]=rcvreq[i][j];
-				Ariv.tmp_req[i][j].val-=del;
-			}
+		int tmp[2];
+		for (int j = 0; j < 2; j++) {
+			tmp[MAX] = Ariv.tmp_req[MAX][j].val;
+			tmp[MIN] = Ariv.tmp_req[MIN][j].val;
+			Ariv.tmp_req[MAX][j].val = min(
+					tmp[MAX], rcvreq[MAX][j].val - del);
+			Ariv.tmp_req[MIN][j].val = max(
+					tmp[MIN], rcvreq[MIN][j].val - del);
 		}
+		Ariv.CalcTmpMarg();
 		Ariv.updateWC();
 	}
 

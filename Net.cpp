@@ -103,25 +103,27 @@ list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
 	list<receiver*>::iterator j;
 	list<receiver*> tmp;
 	M = MODE;
-	for (auto& i : this->receivers) {
+	for (auto i : this->receivers) {
 		if (i->cell->visittime > resettime) {
 			tmp.push_back(i);
 		}
 	}
 	tmp.sort(CompPRcv);
 	j = find(this->receivers.begin(), this->receivers.end(), tmp.front());
+
 	return j;
 }
 
 void Net::RecordBS(path_vec::iterator PA, list<receiver*>::iterator ref,
 		margin refm, PriorityQ& BS, MAXMIN MODE, Tr state) {
 	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
-	for (auto i=this->receivers.begin();i!=this->receivers.end();i++) {
-		if (*ref != *i && (*i)->cell->visittime > resettime) {
-			margin tmp=refmarg-(*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state];
+	for (auto i = this->receivers.begin(); i != this->receivers.end(); i++) {
+		if (ref != i && (*i)->cell->visittime > resettime) {
+			margin tmp =
+					 (*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state] - refmarg;
 			if (tmp > 0)
 				continue;
-			branchslack bs(PA,tmp,refm,i);
+			branchslack bs(PA, tmp, refm, i);
 			BS.Add(bs);
 		}
 	}

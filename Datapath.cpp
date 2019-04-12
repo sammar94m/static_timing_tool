@@ -21,9 +21,8 @@ string to_string(Tr TR) {
 
 void dataPathDelayCalc() {
 	vector<Net*> INNETS;
-	MAX_PATH MAX_P(0);
-	MIN_PATH MIN_P(0);
-	PriorityQ PQ(0);
+	vector<_PATH*> MAX_P;
+	PriorityQ PQ(4);
 	for (Net* O : OutputTable) {
 		if (O->driver.first == NULL) {
 			cout << O->name << " Net has no driver" << endl;
@@ -32,6 +31,7 @@ void dataPathDelayCalc() {
 		GraphPartition(*O, INNETS);
 		ForwardPropagateValid(INNETS);
 		BackwardPropagateReq(*O);
+		BuildCritandBS(INNETS, MAX_P, MAX, PQ);
 	}
 }
 /*Given a cell backward walk to primary inputs and return them in a Q
@@ -68,7 +68,7 @@ void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet) {
 			}
 
 		}
-		curr->visittime = time(NULL);
+		curr->visittime = resettime+1;
 		curr->ready_inputs = 0;
 
 	}
@@ -124,7 +124,7 @@ void PushNet(Net& net, _PATH* PATH, MAXMIN M) {
 	N_NODE* pNetNode = new N_NODE(new Net(net));
 	PATH->vec.push_back((_NODE*) pNetNode);
 }
-void PushCellandInOutPin(Cell& cell, pin inp,pin outp, _PATH* PATH, MAXMIN M) {
+void PushCellandInOutPin(Cell& cell, pin inp, pin outp, _PATH* PATH, MAXMIN M) {
 	P_NODE* pPinNode = new P_NODE(inp, cell.PinData[inp]);
 	PATH->vec.push_back((_NODE*) pPinNode);
 	C_NODE* pCellNode = new C_NODE(new Cell(cell));
@@ -166,24 +166,34 @@ bool CompInNets(Net* lhs, Net* rhs) {
 	 */
 
 	return ((inputNet*) lhs)->Ariv.GetWCTmpMarg(GLOBM)
-			< ((inputNet*) lhs)->Ariv.GetWCTmpMarg(GLOBM);
+			< ((inputNet*) rhs)->Ariv.GetWCTmpMarg(GLOBM);
 }
 void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
-		MAXMIN M,PriorityQ& BS) {
+		MAXMIN M, PriorityQ& BS) {
 	GLOBM = M;
 	margin maxdiscovered = INT_MIN;
 	unsigned int numPath = 0;
 	unsigned int numbranch = 0;
 	vector<Net*> pNetVec = inputNetVec;
 	sort(pNetVec.begin(), pNetVec.end(), CompInNets);
+//	for (auto& e : pNetVec) {
+//		cout << e->name << " MARG : " << ((inputNet*) e)->Ariv.GetWCTmpMarg(M)
+//				<< endl;
+//	}
+	cout << "Starting Path building " << endl;
 	for (auto inNet : pNetVec) {
 		queue<Net*> pNetQ;
-		if (((inputNet*) inNet)->Ariv.GetWCTmpMarg(M) > maxdiscovered
-				&& numofpaths > numPath+numbranch)
+		if ((((inputNet*) inNet)->Ariv.GetWCTmpMarg(M) > maxdiscovered)
+				&& (numofpaths <= numPath + numbranch)) {
+			cout << "Skipped input: " << inNet->name << " Margin: "
+					<< ((inputNet*) inNet)->Ariv.GetWCTmpMarg(M) << endl;
 			return;
+		}
 		//init critical path
+		cout << "		Building Critical Path: " << inNet->name << endl;
 		margin PATHMARG = ((inputNet*) inNet)->Ariv.GetWCTmpMarg(M);
-		maxdiscovered=max(maxdiscovered,PATHMARG);
+		maxdiscovered = max(maxdiscovered, PATHMARG);
+
 		_PATH* PA;
 		if (M == MAX) {
 			PA = new MAX_PATH(PATHMARG);
@@ -192,21 +202,27 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 		}
 		numPath++;
 		pPATHvec.push_back(PA);
-		pNetQ.push(inNet);
-		while (!pNetQ.empty()) {
-			Net* pN=pNetQ.front();
-			pNetQ.pop();
-			PushNet(*pN,PA,M);
-			if(pN->type!=OUTPUT){
-				auto Rcvit=pN->getCritReciever(M);
-				Tr tr=(*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
-				auto vecIT=PA->vec.end();
+		Net* pN=inNet;
+		while (pN!=NULL) {
+			PushNet(*pN, PA, M);
+			cout << "Pushed Net " <<pN->name<<" to path"<<endl;
+			if (pN->type != OUTPUT) {
+				auto Rcvit = pN->getCritReciever(M);
+				cout << "Critical receiver of net: " << pN->name << " is "<< (*Rcvit)->cell->name << endl;
+				Tr tr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
+				auto vecIT = PA->vec.end();
 				vecIT--;
-				pN->RecordBS(vecIT,Rcvit,PATHMARG,BS,M,tr);
-				PushCellandInOutPin(*((*Rcvit)->cell),(*Rcvit)->inPin,(*Rcvit)->cell->outPin,PA,M);
-				numbranch=BS.getSize();
-				maxdiscovered=max(maxdiscovered,BS.GetMAX());
-				pNetQ.push((*Rcvit)->cell->outNet);
+				pN->RecordBS(vecIT, Rcvit, PATHMARG, BS, M, tr);
+//				cout<<"CALCED BS OF NET "<<pN->name<<endl;
+				PushCellandInOutPin(*((*Rcvit)->cell), (*Rcvit)->inPin,
+						(*Rcvit)->cell->outPin, PA, M);
+				cout << "Pushed Cell " <<(*Rcvit)->cell->name<<" to path"<<endl;
+				numbranch = BS.getSize();
+				maxdiscovered = max(maxdiscovered, BS.GetMAX());
+				pN=(*Rcvit)->cell->outNet;
+			}else{
+				cout <<"		MOVING TO NEXT INPUT"<<endl;
+				pN=NULL;
 			}
 		}
 	}

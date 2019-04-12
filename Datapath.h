@@ -22,5 +22,7 @@ void dataPathDelayCalc();
 void BackwardPropagateReq(Net& OutNet);
 void ForwardPropagateValid(const vector<Net*>& inputNetVec);
 void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet);
+void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
+		MAXMIN M, PriorityQ& BS);
 
 #endif /* DATAPATH_H_ */
