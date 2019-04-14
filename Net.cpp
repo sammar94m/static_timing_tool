@@ -59,7 +59,7 @@ void Net::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin) {
 	} else {
 		//TODO: fix for fanout
 		delay del = getRcvDelay(rcv, rcvpin);
-		int tmp[2];
+		delay tmp[2];
 		for (int j = 0; j < 2; j++) {
 			tmp[MAX] = driver.first->PinData[driver.second].tmp_req[MAX][j].val;
 			tmp[MIN] = driver.first->PinData[driver.second].tmp_req[MIN][j].val;
@@ -96,8 +96,8 @@ PinDat Net::getDrvData() {
 Tr state;
 MAXMIN M;
 bool CompPRcv(receiver* lhs, receiver* rhs) {
-	return rhs->cell->PinData[lhs->inPin].GetWCTmpMarg(M)
-			< rhs->cell->PinData[lhs->inPin].GetWCTmpMarg(M);
+	return lhs->cell->PinData[lhs->inPin].GetWCTmpMarg(M)
+			< rhs->cell->PinData[rhs->inPin].GetWCTmpMarg(M);
 }
 list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
 	list<receiver*>::iterator j;
@@ -115,15 +115,15 @@ list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
 }
 
 void Net::RecordBS(_PATH* pPA,path_vec::iterator PA, list<receiver*>::iterator ref,
-		margin refm, PriorityQ<branchslack>& BS, MAXMIN MODE, Tr state) {
+		margin refm, PriorityQ<branchslack,BRANCHCompare>& BS, MAXMIN MODE, Tr state) {
 	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
 	for (auto i = this->receivers.begin(); i != this->receivers.end(); i++) {
 		if (ref != i && (*i)->cell->visittime > resettime) {
 			margin tmp =
-					 (*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state] - refmarg;
+					refmarg -(*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state] ;
 			if (tmp > 0)
 				continue;
-			branchslack bs(pPA,PA, tmp, refm, i,state);
+			branchslack bs(pPA,(*PA), tmp, refm, i,state);
 			BS.Add(bs);
 		}
 	}

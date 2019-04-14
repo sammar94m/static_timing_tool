@@ -15,25 +15,33 @@ MAXMIN GLOBM = MAX;
 void dataPathDelayCalc() {
 	vector<Net*> INNETS;
 	vector<_PATH*> P[2];
-	PriorityQ<branchslack> PQ_BS[2] = { PriorityQ<branchslack>(numofpaths),
-			PriorityQ<branchslack>(numofpaths) };
-	PriorityQ<_PATH*> PQ_P[2] = { PriorityQ<_PATH*>(numofpaths), PriorityQ<
-			_PATH*>(numofpaths) };
+	PriorityQ<branchslack,BRANCHCompare> PQ_BS[2] = { PriorityQ<branchslack,BRANCHCompare>(numofpaths),
+			PriorityQ<branchslack,BRANCHCompare>(numofpaths) };
+	PriorityQ<_PATH*,PATHCompare> PQ_P[2] = { PriorityQ<_PATH*,PATHCompare>(numofpaths), PriorityQ<_PATH*,PATHCompare>(numofpaths) };
 	for (Net* O : OutputTable) {
 		if (O->driver.first == NULL) {
 			cout << O->name << " Net has no driver" << endl;
 			return;
 		}
 		GraphPartition(*O, INNETS);
+		cout <<endl<<endl;
 		ForwardPropagateValid(INNETS);
+		cout <<endl<<endl;
 		BackwardPropagateReq(*O);
+		cout <<endl<<endl;
 		BuildCritandBS(INNETS, P[MAX], MAX, PQ_BS[MAX]);
+		cout <<endl<<endl;
 		BuildPartialPATHS(P[MAX], PQ_BS[MAX], PQ_P[MAX], MAX);
+		cout <<endl<<endl;
 		BuildCritandBS(INNETS, P[MIN], MIN, PQ_BS[MIN]);
+		cout <<endl<<endl;
 		BuildPartialPATHS(P[MIN], PQ_BS[MIN], PQ_P[MIN], MIN);
+		cout <<endl<<endl;
 	}
 	cout << "		MAX PATHS" << endl;
+
 	PQ_P[MAX].Print(MAX);
+	cout <<endl<<endl;
 	cout << "		MIN PATHS" << endl;
 	PQ_P[MIN].Print(MIN);
 }
@@ -171,7 +179,7 @@ bool CompInNets(Net* lhs, Net* rhs) {
 			< ((inputNet*) rhs)->Ariv.GetWCTmpMarg(GLOBM);
 }
 void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
-		MAXMIN M, PriorityQ<branchslack>& BS) {
+		MAXMIN M, PriorityQ<branchslack,BRANCHCompare>& BS) {
 	GLOBM = M;
 	margin maxdiscovered = INT_MIN;
 	unsigned int numPath = 0;
@@ -192,8 +200,9 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 			return;
 		}
 		//init critical path
-		cout << "		Building Critical Path: " << inNet->name << endl;
 		margin PATHMARG = ((inputNet*) inNet)->Ariv.GetWCTmpMarg(M);
+
+
 		maxdiscovered = max(maxdiscovered, PATHMARG);
 
 		_PATH* PA;
@@ -202,6 +211,7 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 		} else {
 			PA = new MIN_PATH(PATHMARG);
 		}
+		cout << "		Building Critical Path: " << inNet->name <<" ID:"<<PA->id<<" MARG:"<<PATHMARG<< endl;
 		numPath++;
 		pPATHvec.push_back(PA);
 		BSAux(inNet, M, PA, PATHMARG, maxdiscovered, BS, numbranch);
@@ -209,8 +219,9 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 	}
 }
 void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
-		margin& maxdiscovered, PriorityQ<branchslack>& BS,
+		margin& maxdiscovered, PriorityQ<branchslack,BRANCHCompare>& BS,
 		unsigned int& numbranch, bool enforcestate, Tr state) {
+	//TODO: FIX STATE ENFORCEMENT
 	Net* pN = inNet;
 	while (pN != NULL) {
 		if (pN->type != OUTPUT) {
@@ -258,34 +269,39 @@ void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
 		} else {
 			PushNet(*pN, PA, M);
 			cout << "Pushed Net " << pN->name << " to path" << endl;
-			cout << "		MOVING TO NEXT INPUT" << endl;
 
 			pN = NULL;
 		}
 	}
 }
-void AddMin(PriorityQ<_PATH*>& PAQ_d, PriorityQ<_PATH*>& PAQ_s,
-		PriorityQ<branchslack>& BSQ_s, MAXMIN M) {
+void AddMin(PriorityQ<_PATH*,PATHCompare>& PAQ_d, PriorityQ<_PATH*,PATHCompare>& PAQ_s,
+		PriorityQ<branchslack,BRANCHCompare>& BSQ_s, MAXMIN M) {
+		cout<<"PAQ_s min is "<<PAQ_s.GetMIN()<<" BSQ_s min is "<<BSQ_s.GetMIN()<<endl;
 	if (PAQ_s.GetMIN() < BSQ_s.GetMIN()) { //one of them isn't empty
 		_PATH* PA = PAQ_s.PQ.top();
+		cout<<"PATH "<<PA->id <<" is critical"<<endl;
 		PAQ_s.PQ.pop();
 		PAQ_d.Add(PA);
 	} else { ///build the branch and add to PAQ
-		cout << "Starting Branch building " << endl;
+		cout << "	critical branch found - building it " << endl;
 		_PATH* PA;
 		branchslack bs = BSQ_s.PQ.top();
+
 		BSQ_s.PQ.pop();
+		cout<<"Poped branchslack Queue"<<endl;
+		bs.print(M);
 		if (M == MAX) {
 			PA = new MAX_PATH(bs.GetMarg());
 		} else {
 			PA = new MIN_PATH(bs.GetMarg());
 		}
 		//copy the start of the path
-		auto end = bs._it;
+		auto end = find(bs._PA->vec.begin(),bs._PA->vec.end(),bs._pN);
 		end++;
 		for (auto i = bs._PA->vec.begin(); i != end; i++) {
-			bs._PA->vec.push_back(*(i));
+			PA->vec.push_back(*(i));
 		}
+		cout<<"copied Path "<<bs._PA->id<<endl;
 		//Add branch point receiver
 		auto vecIT = PA->vec.end();
 		Tr tr = bs._state;
@@ -298,30 +314,40 @@ void AddMin(PriorityQ<_PATH*>& PAQ_d, PriorityQ<_PATH*>& PAQ_s,
 		PushCellandInOutPin(*((*bs._prcv)->cell), (*bs._prcv)->inPin,
 				(*bs._prcv)->cell->outPin, PA, M, tr, outtr,
 				(*bs._prcv)->cell->DelCache[key]);
+		cout<<"Added branch point "<<(*bs._prcv)->cell->name<<endl;
 		//build the rest of the path
 		margin maxdiscovered = 0;
 		unsigned int numbranch = 0;
 		BSAux((*bs._prcv)->cell->outNet, M, PA, bs.GetMarg(), maxdiscovered,
 				BSQ_s, numbranch, true, outtr);
+		PAQ_d.Add(PA);
+		cout<<"	finished building path "<<PA->id<<" MARG "<<PA->marg<<endl;
 	}
 }
-void BuildPartialPATHS(vector<_PATH*>& pPATHvec, PriorityQ<branchslack>& BSQ,
-		PriorityQ<_PATH*>& PAQ, MAXMIN M) {
-	PriorityQ<_PATH*> PAQ_local(pPATHvec.size());
+void BuildPartialPATHS(vector<_PATH*>& pPATHvec, PriorityQ<branchslack,BRANCHCompare>& BSQ,
+		PriorityQ<_PATH*,PATHCompare>& PAQ, MAXMIN M) {
+	PriorityQ<_PATH*,PATHCompare> PAQ_local(pPATHvec.size());
+	//copy paths to queue
 	for (auto& e : pPATHvec) {
 		PAQ_local.Add(e);
 	}
-	while (!(PAQ_local.PQ.empty()) && !(BSQ.PQ.empty())) {
+	cout<<"		Adding worst "<<numofpaths<<" PATHS TO QUEUE"<<endl;
+	while (!(PAQ_local.PQ.empty()) || !(BSQ.PQ.empty())) {
 		if (PAQ.isFull()) {
+			cout<<"PAQ MAX IS "<<PAQ.GetMAX()<<endl;
 			if (min(PAQ_local.GetMIN(), BSQ.GetMIN()) >= PAQ.GetMAX()) { // all the paths have better margin
 				break;
 			} else {
+				//add path with min margin to PAQ
 				AddMin(PAQ, PAQ_local, BSQ, M);
 			}
 		} else {
+			//add path with min margin to PAQ
 			AddMin(PAQ, PAQ_local, BSQ, M);
 		}
 	}
+	//clear results
+	cout<<"Clearing uncritical paths and branches"<<endl;
 	BSQ.PQ.clear();
 	pPATHvec.clear();
 }

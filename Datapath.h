@@ -23,11 +23,11 @@ void BackwardPropagateReq(Net& OutNet);
 void ForwardPropagateValid(const vector<Net*>& inputNetVec);
 void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet);
 void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
-		MAXMIN M, PriorityQ<branchslack>& BS);
+		MAXMIN M, PriorityQ<branchslack,BRANCHCompare>& BS);
 void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
-		margin& maxdiscovered, PriorityQ<branchslack>& BS,
+		margin& maxdiscovered, PriorityQ<branchslack,BRANCHCompare>& BS,
 		unsigned int& numbranch, bool enforcestate = false, Tr state = FALL);
 
-void BuildPartialPATHS(vector<_PATH*>& pPATHvec, PriorityQ<branchslack>& BSQ,
-	PriorityQ<_PATH*>& PAQ, MAXMIN M);
+void BuildPartialPATHS(vector<_PATH*>& pPATHvec, PriorityQ<branchslack,BRANCHCompare>& BSQ,
+	PriorityQ<_PATH*,PATHCompare>& PAQ, MAXMIN M);
 #endif /* DATAPATH_H_ */

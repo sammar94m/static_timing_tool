@@ -34,7 +34,7 @@ public:
 	void calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin);
 	//virtual void print();
 	list<receiver*>::iterator getCritReciever(MAXMIN MODE);
-	void RecordBS(_PATH* pPA,path_vec::iterator PA,list<receiver*>::iterator ref,margin refmarg,PriorityQ<branchslack>& BS,MAXMIN MODE,Tr state);
+	void RecordBS(_PATH* pPA,path_vec::iterator PA,list<receiver*>::iterator ref,margin refmarg,PriorityQ<branchslack,BRANCHCompare>& BS,MAXMIN MODE,Tr state);
 };
 
 #endif

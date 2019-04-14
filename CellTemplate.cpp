@@ -15,39 +15,8 @@ CellTemplate::CellTemplate(string name) :
 }
 CellTemplate::~CellTemplate() {
 }
-delay CellTemplate::getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
-		InOutTr Tr, slope inslope, load outload) {
-	int indslp, indld;
-	bool exactslp, exactld;
-	indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);
-	indld = getClosestindex(OUT_LOAD_POINTS, outload, exactld);
-	if (withinboundry(indslp, exactslp) && withinboundry(indld, exactld)) { //WITHIN TABLE BOUNDRIES
-		return delayTable[pair<input_pin, output_pin>(in, out)].GetTableAV(
-				AnlsType, Tr, indslp, indld, exactld, exactslp);
-	} else { //OUTSIDE TABLE BOUNDRIES
-		return delayTable[pair<input_pin, output_pin>(in, out)].GetExtTableVal(
-				AnlsType, Tr, inslope, outload, indslp, indld, exactld,
-				exactslp);
-	}
-	return -1;
-}
-delay CellTemplate::getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
-		InOutTr Tr, slope inslope, load outload) {
-	int indslp, indld;
-	bool exactslp, exactld;
-	indslp = getClosestindex(IN_SLOPE_POINTS, inslope, exactslp);
-	indld = getClosestindex(OUT_LOAD_POINTS, outload, exactld);
-	if (withinboundry(indslp, exactslp) && withinboundry(indld, exactld)) { //WITHIN TABLE BOUNDRIES
-		return slopeTable[pair<input_pin, output_pin>(in, out)].GetTableAV(
-				AnlsType, Tr, indslp, indld, exactld, exactslp);
-	} else { //OUTSIDE TABLE BOUNDRIES
-		return slopeTable[pair<input_pin, output_pin>(in, out)].GetExtTableVal(
-				AnlsType, Tr, inslope, outload, indslp, indld, exactld,
-				exactslp);
 
-	}
-	return -1;
-}
+
 bool CellTemplate::withinboundry(int ida, bool exacta) {
 	if (ida == 0 && exacta == false) {
 		return false;

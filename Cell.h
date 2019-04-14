@@ -49,7 +49,7 @@ public:
 	int getnumofinputs();
 	void resetReq();
 	void CalcInputReq();
-	void RecordBS(PriorityQ<branchslack>& Q, MAXMIN M);
+	void RecordBS(PriorityQ<branchslack,BRANCHCompare>& Q, MAXMIN M);
 	void CalReq(pin in, pin out, required (&inreq)[2][2],
 			 Tr (&inTr)[2][2],const required (&outreq)[2][2]);
 	pin getWCpin(MAXMIN);

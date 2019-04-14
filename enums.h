@@ -32,10 +32,10 @@ using namespace std;
 #define _FALL_ 0
 #define _RISE_ 1
 typedef vector<string> buffer;
-typedef int delay;
-typedef int slope; //long int
-typedef int margin;
-typedef int load;
+typedef double delay;
+typedef double slope; //long int
+typedef double margin;
+typedef double load;
 typedef std::string input_pin;
 typedef std::string output_pin;
 typedef std::string pin;

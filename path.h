@@ -64,7 +64,7 @@ public:
 
 	}
 	bool operator <(const _PATH& rhs) const {
-		return this->marg > rhs.marg;
+		return this->marg < rhs.marg;
 	}
 	virtual void print()=0;
 	void print(MAXMIN M) {
@@ -91,6 +91,7 @@ public:
 		_PATH::print(MAX);
 	}
 };
+
 class MIN_PATH: public _PATH {
 public:
 	static int counter;
@@ -102,34 +103,46 @@ public:
 		_PATH::print(MIN);
 	}
 };
+struct PATHCompare
+{
+    bool operator()(const _PATH* e1, const _PATH* e2) const
+    {
+        return e1->marg > e2->marg;
+    }
+};
 class branchslack {
 public:
 	_PATH* _PA;
-	path_vec::iterator _it;
+	_NODE* _pN;
 	margin _slackofpath;
 	margin _diffslack;
 	list<receiver*>::iterator _prcv;
 	Tr _state;
-	branchslack(_PATH* PA,path_vec::iterator& it, margin diffslack, margin slack,
+	branchslack(_PATH* PA,_NODE* pN, margin diffslack, margin slack,
 			list<receiver*>::iterator& p,Tr state);
 
 	bool operator <(const branchslack& rhs) const {
 		return this->_slackofpath - this->_diffslack
-				> rhs._slackofpath - rhs._diffslack; // max heap TODO: CHECK IF MAX HEAP
+				< rhs._slackofpath - rhs._diffslack; // max heap TODO: CHECK IF MAX HEAP
 	}
 	margin GetMarg() const{
 		return this->_slackofpath - this->_diffslack;
 	}
-	void print(MAXMIN M) const{
-
-	}
+	void print(MAXMIN M);
 
 };
-template<class T>
+struct BRANCHCompare
+{
+    bool operator()(const branchslack &e1, const branchslack &e2) const
+    {
+        return e1.GetMarg() > e2.GetMarg();
+    }
+};
+template<class T, typename C>
 class PriorityQ {
 public:
 	unsigned int MAX_SIZE;
-	boost::heap::priority_queue<T> PQ;
+	boost::heap::priority_queue<T,boost::heap::compare<C>> PQ;
 	PriorityQ(unsigned int _MAX_SIZE) :
 			MAX_SIZE(_MAX_SIZE) {
 	}

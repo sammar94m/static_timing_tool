@@ -28,16 +28,20 @@ void P_NODE::print(MAXMIN M) {
 	cout << "Pin:	" << _pin << "	" << T_DAT.tmp_slope[M][_state] << "	-	"
 			<< Trtostring(_state) << endl;
 }
-branchslack::branchslack(_PATH* PA, path_vec::iterator& it, margin diffslack,
+branchslack::branchslack(_PATH* PA, _NODE* pN, margin diffslack,
 		margin slack, list<receiver*>::iterator& p, Tr state) :
-		_PA(PA), _it(it), _slackofpath(slack), _diffslack(diffslack), _prcv(p), _state(
+		_PA(PA), _pN(pN), _slackofpath(slack), _diffslack(diffslack), _prcv(p), _state(
 				state) {
-	cout << "net " << ((N_NODE*) (*it))->_net->name << ": found branch to "
+	cout << "net " << ((N_NODE*) (_pN))->_net->name << ": found branch to "
 			<< (*p)->cell->name << " with diff " << diffslack << endl;
 }
-
+void branchslack::print(MAXMIN M) {
+	cout<<"printing branch slack"<<endl;
+	cout << "net " << ((N_NODE*) (_pN))->_net->name << " branch to "
+			<< (*_prcv)->cell->name << " with diff " << _diffslack << endl;
+}
 template<>
-margin PriorityQ<branchslack>::GetMIN() {
+margin PriorityQ<branchslack,BRANCHCompare>::GetMIN() {
 	if (PQ.empty()) {
 		return INT_MAX;
 	} else {
@@ -47,7 +51,7 @@ margin PriorityQ<branchslack>::GetMIN() {
 	}
 }
 template<>
-margin PriorityQ<_PATH*>::GetMIN() {
+margin PriorityQ<_PATH*,PATHCompare>::GetMIN() {
 	if (PQ.empty()) {
 		return INT_MAX;
 	} else {
@@ -57,7 +61,7 @@ margin PriorityQ<_PATH*>::GetMIN() {
 	}
 }
 template<>
-margin PriorityQ<branchslack>::GetMAX() {
+margin PriorityQ<branchslack,BRANCHCompare>::GetMAX() {
 	if (PQ.empty()) {
 		return INT_MIN;
 	} else {
@@ -71,7 +75,7 @@ margin PriorityQ<branchslack>::GetMAX() {
 	}
 }
 template<>
-margin PriorityQ<_PATH*>::GetMAX() {
+margin PriorityQ<_PATH*,PATHCompare>::GetMAX() {
 	if (PQ.empty()) {
 		return INT_MIN;
 	} else {
@@ -85,15 +89,16 @@ margin PriorityQ<_PATH*>::GetMAX() {
 	}
 }
 template<>
-void PriorityQ<branchslack>::Print(MAXMIN M) const {
+void PriorityQ<branchslack,BRANCHCompare>::Print(MAXMIN M) const {
 	auto begin = PQ.begin();
 	auto end = PQ.end();
 	for (auto i = begin; i != end; i++) {
-		(*i).print(M);
+		auto x=(*i);
+		x.print(M);
 	}
 }
 template<>
-void PriorityQ<_PATH*>::Print(MAXMIN M) const {
+void PriorityQ<_PATH*,PATHCompare>::Print(MAXMIN M) const {
 	auto begin = PQ.begin();
 	auto end = PQ.end();
 	for (auto i = begin; i != end; i++) {

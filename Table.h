@@ -21,7 +21,7 @@ public:
 			NULL), OUT_LOAD_POINTS_PTR(NULL) {
 	}
 
-	void AddTable(int** table, MAXMIN AnlsType, InOutTr Tr, int r, int c) {
+	void AddTable(T** table, MAXMIN AnlsType, InOutTr Tr, int r, int c) {
 		if (table_rows < 0 || table_cols < 0) {
 			table_rows = r;
 			table_cols = c;
@@ -39,106 +39,14 @@ public:
 	T** GetTable(MAXMIN AnlsType, InOutTr Tr, slope inslope, load outload) {
 		return _16tables[pair<MAXMIN, InOutTr>(AnlsType, Tr)];
 	}
-	T GetTableVal(MAXMIN AnlsType, InOutTr Tr, slope inslope, load outload) {
-		if (_16tables.find(pair<MAXMIN, InOutTr>(AnlsType, Tr))
-				== _16tables.end()) {
-			return -1;
-		} else {
-			return _16tables[pair<MAXMIN, InOutTr>(AnlsType, Tr)][inslope][outload];
-		}
-	}
+	T GetTableVal(MAXMIN AnlsType, InOutTr Tr, slope inslope, load outload);
 	T GetTableAV(MAXMIN AnlsType, InOutTr Tr, int inslopeindex,
-			int outloadindex, bool exactld, bool exactSlp) {
-		T tmp = 0;
-		if (exactSlp && exactld) { //exact
-			return this->GetTableVal(AnlsType, Tr, inslopeindex, outloadindex);
-		} else { //not exact average nearby
-			if (inslopeindex != 0 && outloadindex != 0) {
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
-						outloadindex - 1);
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
-						outloadindex);
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
-						outloadindex - 1);
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
-						outloadindex);
-				return tmp / 4;
-			} else if (inslopeindex == 0) { // one of them is zero - if both the first if would be taken
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
-						outloadindex - 1);
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
-						outloadindex);
-				return tmp / 2;
-			} else if (outloadindex == 0) {
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex,
-						outloadindex);
-				tmp += this->GetTableVal(AnlsType, Tr, inslopeindex - 1,
-						outloadindex);
-				return tmp / 2;
-			}
-		}
-		return -1;
-	}
-
+			int outloadindex, bool exactld, bool exactSlp);
 	T GetExtTableVal(MAXMIN AnlsType, InOutTr Tr, slope inslope, load outload,
-			int inslopeindex, int outloadindex, bool exactld, bool exactSlp) {
-		//edge cases
-		int ldsize = OUT_LOAD_POINTS_PTR->size();
-		int slpsize = IN_SLOPE_POINTS_PTR->size();
-		int ldind = outloadindex == -1 ? ldsize - 1 : outloadindex;
-		int slpind = inslopeindex == -1 ? slpsize - 1 : inslopeindex;
-		T RowDel = GetRowDelta(AnlsType, Tr, slpind, outloadindex == -1);
-		T ColDel = GetColDelta(AnlsType, Tr, ldind, inslopeindex -= -1);
-		slope yDel = inslope - IN_SLOPE_POINTS_PTR->operator [](slpind);
-		delay xDel = outload - OUT_LOAD_POINTS_PTR->operator [](ldind); //TODO: ADD EXACT/NONEXACT CASES
-		if ((inslopeindex == -1 || inslopeindex == 0)
-				&& (outloadindex == -1 || outloadindex == 0)) { //two indexes outside
-			return GetTableVal(AnlsType, Tr, slpind, ldind) + xDel * RowDel
-					+ yDel * ColDel;
-		} else if (inslopeindex == -1 || inslopeindex == 0) {
-			return GetTableVal(AnlsType, Tr, slpind, ldind) + yDel * ColDel;
-		} else if (outloadindex == -1 || outloadindex == 0) {
-			return GetTableVal(AnlsType, Tr, slpind, ldind) + xDel * RowDel;
-		}
-		return -1;
-	}
-	T GetColDelta(MAXMIN AnlsType, InOutTr Tr, unsigned int Col, bool down) {
-		T Del;
-		int size = IN_SLOPE_POINTS_PTR->size();
-		if (!down) {
-			Del = GetTableVal(AnlsType, Tr, 0, Col)
-					- GetTableVal(AnlsType, Tr, 1, Col);
-			return Del
-					/ (IN_SLOPE_POINTS_PTR->operator [](0)
-							- IN_SLOPE_POINTS_PTR->operator [](1));
-		} else {
-			Del = GetTableVal(AnlsType, Tr, size - 1, Col)
-					- GetTableVal(AnlsType, Tr, size - 2, Col);
-			return Del
-					/ (IN_SLOPE_POINTS_PTR->operator [](size - 1)
-							- IN_SLOPE_POINTS_PTR->operator [](size - 2));
+			int inslopeindex, int outloadindex, bool exactld, bool exactSlp);
+	T GetColDelta(MAXMIN AnlsType, InOutTr Tr, unsigned int Col, bool down);
 
-		}
-	}
-
-	T GetRowDelta(MAXMIN AnlsType, InOutTr Tr, unsigned int Row, bool right) {
-		T Del;
-		int size = OUT_LOAD_POINTS_PTR->size();
-		if (!right) {
-			Del = GetTableVal(AnlsType, Tr, Row, 0)
-					- GetTableVal(AnlsType, Tr, Row, 1);
-			return Del
-					/ (OUT_LOAD_POINTS_PTR->operator [](0)
-							- OUT_LOAD_POINTS_PTR->operator [](1));
-		} else {
-			Del = GetTableVal(AnlsType, Tr, Row, size - 1)
-					- GetTableVal(AnlsType, Tr, Row, size - 2);
-			return Del
-					/ (OUT_LOAD_POINTS_PTR->operator [](size - 1)
-							- OUT_LOAD_POINTS_PTR->operator [](size - 2));
-
-		}
-	}
+	T GetRowDelta(MAXMIN AnlsType, InOutTr Tr, unsigned int Row, bool right);
 
 //	~Table() {
 //		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
@@ -148,7 +56,7 @@ public:
 
 	void print() {
 		for (auto iter = _16tables.begin(); iter != _16tables.end(); ++iter) {
-			int** table = iter.operator *().second;
+			T** table = iter.operator *().second;
 			if (!table) {
 
 				cout << "-------------------shit no table " << endl << endl;
