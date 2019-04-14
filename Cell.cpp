@@ -140,13 +140,13 @@ void Cell::CalcInputReq() {
 		auto& inDat = pair.second;
 		if (in_Pin == outPin)
 			continue;
-		CalReq(in_Pin, outPin, inDat.tmp_req, Dat.tmp_req);
+		CalReq(in_Pin, outPin, inDat.tmp_req,  inDat.tmp_TR,Dat.tmp_req);
 		inDat.CalcTmpMarg();
 		inDat.updateWC();
 	}
 }
 void Cell::CalReq(pin in, pin out, required (&inreq)[2][2],
-		const required (&outreq)[2][2]) {
+		Tr (&inTr)[2][2],const required (&outreq)[2][2] ) {
 	//FALL = 0 Rise = 1
 	DelCacheKey key;
 	delay tmp[2][4];/*Mode/TR*/
@@ -165,10 +165,16 @@ void Cell::CalReq(pin in, pin out, required (&inreq)[2][2],
 			if (!PossiblTr(in, outPin, ioTr)) {
 				continue;
 			}
-			tmp_req[MAX][j] = min(tmp_req[MAX][j],
-					outreq[MAX][q].val - tmp[MAX][ioTr]);
-			tmp_req[MIN][j] = max(tmp_req[MIN][j],
-					outreq[MIN][q].val - tmp[MIN][ioTr]);
+			delay maxd = outreq[MAX][q].val - tmp[MAX][ioTr];
+			delay mind = outreq[MIN][q].val - tmp[MIN][ioTr];
+			if (maxd < tmp_req[MAX][j]) {
+				tmp_req[MAX][j] = maxd;
+				inTr[MAX][j] = q;
+			}
+			if (mind > tmp_req[MAX][j]) {
+				tmp_req[MIN][j] = mind;
+				inTr[MIN][j] = q;
+			}
 		}
 	}
 
@@ -191,9 +197,6 @@ void Cell::resetReq() {
 	for (auto m : PinData) {
 		m.second.resetReq();
 	}
-}
-
-void Cell::RecordBS(PriorityQ& Q, MAXMIN M) {
 }
 
 pin Cell::getWCpin(MAXMIN M) {

@@ -11,18 +11,14 @@ vector<MAX_PATH> MAXP;
 vector<MIN_PATH> MINP;
 int MAX_PATH::counter = 0;
 int MIN_PATH::counter = 0;
-string to_string(Tr TR) {
-	if (TR == FALL) {
-		return string("F");
-	} else {
-		return string("R");
-	}
-}
-
+MAXMIN GLOBM = MAX;
 void dataPathDelayCalc() {
 	vector<Net*> INNETS;
-	vector<_PATH*> MAX_P;
-	PriorityQ PQ(4);
+	vector<_PATH*> P[2];
+	PriorityQ<branchslack> PQ_BS[2] = { PriorityQ<branchslack>(numofpaths),
+			PriorityQ<branchslack>(numofpaths) };
+	PriorityQ<_PATH*> PQ_P[2] = { PriorityQ<_PATH*>(numofpaths), PriorityQ<
+			_PATH*>(numofpaths) };
 	for (Net* O : OutputTable) {
 		if (O->driver.first == NULL) {
 			cout << O->name << " Net has no driver" << endl;
@@ -31,8 +27,15 @@ void dataPathDelayCalc() {
 		GraphPartition(*O, INNETS);
 		ForwardPropagateValid(INNETS);
 		BackwardPropagateReq(*O);
-		BuildCritandBS(INNETS, MAX_P, MAX, PQ);
+		BuildCritandBS(INNETS, P[MAX], MAX, PQ_BS[MAX]);
+		BuildPartialPATHS(P[MAX], PQ_BS[MAX], PQ_P[MAX], MAX);
+		BuildCritandBS(INNETS, P[MIN], MIN, PQ_BS[MIN]);
+		BuildPartialPATHS(P[MIN], PQ_BS[MIN], PQ_P[MIN], MIN);
 	}
+	cout << "		MAX PATHS" << endl;
+	PQ_P[MAX].Print(MAX);
+	cout << "		MIN PATHS" << endl;
+	PQ_P[MIN].Print(MIN);
 }
 /*Given a cell backward walk to primary inputs and return them in a Q
  * mark the visited cells with time stamps
@@ -68,7 +71,7 @@ void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet) {
 			}
 
 		}
-		curr->visittime = resettime+1;
+		curr->visittime = resettime + 1;
 		curr->ready_inputs = 0;
 
 	}
@@ -120,16 +123,17 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 	}
 
 }
-void PushNet(Net& net, _PATH* PATH, MAXMIN M) {
-	N_NODE* pNetNode = new N_NODE(new Net(net));
+void PushNet(Net& net, _PATH* PATH, MAXMIN M, delay del = 0, slope slp = 0) {
+	N_NODE* pNetNode = new N_NODE(new Net(net), del, slp);
 	PATH->vec.push_back((_NODE*) pNetNode);
 }
-void PushCellandInOutPin(Cell& cell, pin inp, pin outp, _PATH* PATH, MAXMIN M) {
-	P_NODE* pPinNode = new P_NODE(inp, cell.PinData[inp]);
+void PushCellandInOutPin(Cell& cell, pin inp, pin outp, _PATH* PATH, MAXMIN M,
+		Tr inTr, Tr outTr, delay del = 0) {
+	P_NODE* pPinNode = new P_NODE(inp, cell.PinData[inp], inTr);
 	PATH->vec.push_back((_NODE*) pPinNode);
-	C_NODE* pCellNode = new C_NODE(new Cell(cell));
+	C_NODE* pCellNode = new C_NODE(new Cell(cell), del);
 	PATH->vec.push_back((_NODE*) pCellNode);
-	pPinNode = new P_NODE(outp, cell.PinData[outp]);
+	pPinNode = new P_NODE(outp, cell.PinData[outp], outTr);
 	PATH->vec.push_back((_NODE*) pPinNode);
 }
 void BackwardPropagateReq(Net& OutNet) {
@@ -158,8 +162,6 @@ void BackwardPropagateReq(Net& OutNet) {
 
 	}
 }
-MAXMIN GLOBM = MAX;
-
 bool CompInNets(Net* lhs, Net* rhs) {
 	/*implement <
 	 *
@@ -169,7 +171,7 @@ bool CompInNets(Net* lhs, Net* rhs) {
 			< ((inputNet*) rhs)->Ariv.GetWCTmpMarg(GLOBM);
 }
 void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
-		MAXMIN M, PriorityQ& BS) {
+		MAXMIN M, PriorityQ<branchslack>& BS) {
 	GLOBM = M;
 	margin maxdiscovered = INT_MIN;
 	unsigned int numPath = 0;
@@ -202,28 +204,124 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 		}
 		numPath++;
 		pPATHvec.push_back(PA);
-		Net* pN=inNet;
-		while (pN!=NULL) {
-			PushNet(*pN, PA, M);
-			cout << "Pushed Net " <<pN->name<<" to path"<<endl;
-			if (pN->type != OUTPUT) {
-				auto Rcvit = pN->getCritReciever(M);
-				cout << "Critical receiver of net: " << pN->name << " is "<< (*Rcvit)->cell->name << endl;
-				Tr tr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
-				auto vecIT = PA->vec.end();
-				vecIT--;
-				pN->RecordBS(vecIT, Rcvit, PATHMARG, BS, M, tr);
-//				cout<<"CALCED BS OF NET "<<pN->name<<endl;
-				PushCellandInOutPin(*((*Rcvit)->cell), (*Rcvit)->inPin,
-						(*Rcvit)->cell->outPin, PA, M);
-				cout << "Pushed Cell " <<(*Rcvit)->cell->name<<" to path"<<endl;
-				numbranch = BS.getSize();
-				maxdiscovered = max(maxdiscovered, BS.GetMAX());
-				pN=(*Rcvit)->cell->outNet;
-			}else{
-				cout <<"		MOVING TO NEXT INPUT"<<endl;
-				pN=NULL;
+		BSAux(inNet, M, PA, PATHMARG, maxdiscovered, BS, numbranch);
+
+	}
+}
+void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
+		margin& maxdiscovered, PriorityQ<branchslack>& BS,
+		unsigned int& numbranch, bool enforcestate, Tr state) {
+	Net* pN = inNet;
+	while (pN != NULL) {
+		if (pN->type != OUTPUT) {
+			auto Rcvit = pN->getCritReciever(M);
+			cout << "Critical receiver of net: " << pN->name << " is "
+					<< (*Rcvit)->cell->name << endl;
+			Tr tr;
+			if (enforcestate == false) {
+				tr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
+			} else {
+				tr = state;
 			}
+			slope inslope;
+			delay netdelay = pN->getRcvDelay(Rcvit.operator *()->cell,
+					Rcvit.operator *()->inPin);
+			if (pN->type == INPUT) {
+				inslope = ((inputNet*) pN)->Ariv.tmp_slope[M][tr];
+			} else {
+				inslope =
+						pN->driver.first->PinData[pN->driver.second].tmp_slope[M][tr];
+			}
+			PushNet(*pN, PA, M, netdelay, inslope);
+			auto vecIT = PA->vec.end();
+			vecIT--;
+			Tr outtr;
+			if (enforcestate == false) {
+				outtr =
+						(*Rcvit)->cell->PinData[(*Rcvit)->cell->outPin].tmp_TR[M][tr];
+			} else {
+				outtr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].tmp_TR[M][tr];
+			}
+			cout << "Pushed Net " << pN->name << " to path" << endl;
+			pN->RecordBS(PA, vecIT, Rcvit, PATHMARG, BS, M, tr);
+			InOutTr j = GetInOut(tr, outtr);
+			auto key = DelCacheKey(std::make_pair(M, j),
+					std::make_pair((*Rcvit)->inPin, (*Rcvit)->cell->outPin));
+			PushCellandInOutPin(*((*Rcvit)->cell), (*Rcvit)->inPin,
+					(*Rcvit)->cell->outPin, PA, M, tr, outtr,
+					(*Rcvit)->cell->DelCache[key]);
+			cout << "Pushed Cell " << (*Rcvit)->cell->name << " to path"
+					<< endl;
+			numbranch = BS.getSize();
+			maxdiscovered = max(maxdiscovered, BS.GetMAX());
+			pN = (*Rcvit)->cell->outNet;
+		} else {
+			PushNet(*pN, PA, M);
+			cout << "Pushed Net " << pN->name << " to path" << endl;
+			cout << "		MOVING TO NEXT INPUT" << endl;
+
+			pN = NULL;
 		}
 	}
+}
+void AddMin(PriorityQ<_PATH*>& PAQ_d, PriorityQ<_PATH*>& PAQ_s,
+		PriorityQ<branchslack>& BSQ_s, MAXMIN M) {
+	if (PAQ_s.GetMIN() < BSQ_s.GetMIN()) { //one of them isn't empty
+		_PATH* PA = PAQ_s.PQ.top();
+		PAQ_s.PQ.pop();
+		PAQ_d.Add(PA);
+	} else { ///build the branch and add to PAQ
+		cout << "Starting Branch building " << endl;
+		_PATH* PA;
+		branchslack bs = BSQ_s.PQ.top();
+		BSQ_s.PQ.pop();
+		if (M == MAX) {
+			PA = new MAX_PATH(bs.GetMarg());
+		} else {
+			PA = new MIN_PATH(bs.GetMarg());
+		}
+		//copy the start of the path
+		auto end = bs._it;
+		end++;
+		for (auto i = bs._PA->vec.begin(); i != end; i++) {
+			bs._PA->vec.push_back(*(i));
+		}
+		//Add branch point receiver
+		auto vecIT = PA->vec.end();
+		Tr tr = bs._state;
+		vecIT--;
+		Tr outtr =
+				(*bs._prcv)->cell->PinData[(*bs._prcv)->cell->outPin].tmp_TR[M][tr];
+		InOutTr j = GetInOut(tr, outtr);
+		auto key = DelCacheKey(std::make_pair(M, j),
+				std::make_pair((*bs._prcv)->inPin, (*bs._prcv)->cell->outPin));
+		PushCellandInOutPin(*((*bs._prcv)->cell), (*bs._prcv)->inPin,
+				(*bs._prcv)->cell->outPin, PA, M, tr, outtr,
+				(*bs._prcv)->cell->DelCache[key]);
+		//build the rest of the path
+		margin maxdiscovered = 0;
+		unsigned int numbranch = 0;
+		BSAux((*bs._prcv)->cell->outNet, M, PA, bs.GetMarg(), maxdiscovered,
+				BSQ_s, numbranch, true, outtr);
+	}
+}
+void BuildPartialPATHS(vector<_PATH*>& pPATHvec, PriorityQ<branchslack>& BSQ,
+		PriorityQ<_PATH*>& PAQ, MAXMIN M) {
+	PriorityQ<_PATH*> PAQ_local(pPATHvec.size());
+	for (auto& e : pPATHvec) {
+		PAQ_local.Add(e);
+	}
+	while (!(PAQ_local.PQ.empty()) && !(BSQ.PQ.empty())) {
+		if (PAQ.isFull()) {
+			if (min(PAQ_local.GetMIN(), BSQ.GetMIN()) >= PAQ.GetMAX()) { // all the paths have better margin
+				break;
+			} else {
+				AddMin(PAQ, PAQ_local, BSQ, M);
+			}
+		} else {
+			AddMin(PAQ, PAQ_local, BSQ, M);
+		}
+	}
+	BSQ.PQ.clear();
+	pPATHvec.clear();
 }

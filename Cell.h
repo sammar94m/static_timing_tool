@@ -8,7 +8,7 @@
 #include "Pin.h"
 #include "path.h"
 
-typedef std::pair< std::pair<MAXMIN, InOutTr> , std::pair<input_pin, output_pin> > DelCacheKey;
+typedef std::pair<std::pair<MAXMIN, InOutTr>, std::pair<input_pin, output_pin> > DelCacheKey;
 
 class Cell {
 public:
@@ -21,10 +21,11 @@ public:
 	map<pin, load> pinLoadMap;
 	map<pin, PinDat> PinData;
 	map<DelCacheKey, delay> DelCache;
+	map<DelCacheKey, delay> SlpCache;
 	time_t visittime;
 	int ready_inputs;
 	bool visited;
-	bool isCrit[2]={false,false};
+	bool isCrit[2] = { false, false };
 	virtual ~Cell();
 	Cell();
 	Cell(cellType _type, string _name, CellTemplate* _Template);
@@ -48,9 +49,9 @@ public:
 	int getnumofinputs();
 	void resetReq();
 	void CalcInputReq();
-	void RecordBS(PriorityQ& Q, MAXMIN M);
+	void RecordBS(PriorityQ<branchslack>& Q, MAXMIN M);
 	void CalReq(pin in, pin out, required (&inreq)[2][2],
-			const required (&outreq)[2][2]);
+			 Tr (&inTr)[2][2],const required (&outreq)[2][2]);
 	pin getWCpin(MAXMIN);
 };
 

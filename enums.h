@@ -45,11 +45,11 @@ typedef enum Timetag_ {
 	BF, BR, AF, AR
 } timetag;
 typedef struct valid_ {
-	int val;
+	delay val;
 	timetag tag;
 } valid;
 typedef struct required_ {
-	int val;
+	delay val;
 	timetag tag;
 } required;
 enum cellType {
@@ -73,6 +73,8 @@ enum FlopSetup {
 typedef enum _netType {
 	LOCAL, INPUT, OUTPUT
 } netType;
+InOutTr GetInOut(Tr in, Tr out);
+
 //global
 extern map<int, string> MAXpaths;
 extern map<int, string> MINpaths;
