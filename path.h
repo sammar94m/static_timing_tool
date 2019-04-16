@@ -70,7 +70,13 @@ public:
 	void print(MAXMIN M) {
 		cout << "Path id: " << id << endl;
 		cout << "MARGIN: " << marg << endl;
-		cout << "OBJ	"<<"NAME	"<<"SLOPE	"<<"DELAY	"<<"STATE	"<<endl;
+		cout << "OBJ	"
+		<<"NAME	"
+		<<"SLOPE	"
+		<<"DELAY	"
+		<<"STATE	"
+		<<"WC_VLD	"
+		<<"WC_REQ	"<<endl;
 		for (auto i : vec) {
 			i->print(M);
 		}

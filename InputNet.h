@@ -2,18 +2,18 @@
 #define INPUTNET_H_
 
 #include "Net.h"
-
+#include "Pin.h"
 using namespace boost;
 
 class inputNet: public Net {
 
 public:
 	PinDat Ariv;
-	int low; //clk param
-	int high; //clk param
+	delay low; //clk param
+	delay high; //clk param
 	bool visited;
 	inputNet(string name, bool isClk, slope SL_RISE, slope SL_FALL,
-			string AR_TIME, int HIGH = 0, int LOW = 0) :
+			string AR_TIME, delay HIGH = 0, delay LOW = 0) :
 			Net(name, INPUT, isClk) {
 		low = LOW;
 		high = HIGH;
@@ -38,6 +38,9 @@ public:
 				Ariv.tmp_vld[i][j].tag = edgeref;
 				Ariv.tmp_TR[i][j] = (j == FALL) ? FALL : RISE;
 			}
+		}
+		if(name!="CLK"){
+		Ariv.align_vld();
 		}
 		Ariv.updateWC(); //TODO: WRITE WC
 

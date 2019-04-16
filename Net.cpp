@@ -63,10 +63,24 @@ void Net::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin) {
 		for (int j = 0; j < 2; j++) {
 			tmp[MAX] = driver.first->PinData[driver.second].tmp_req[MAX][j].val;
 			tmp[MIN] = driver.first->PinData[driver.second].tmp_req[MIN][j].val;
-			driver.first->PinData[driver.second].tmp_req[MAX][j].val = min(
-					tmp[MAX], rcvreq[MAX][j].val - del);
-			driver.first->PinData[driver.second].tmp_req[MIN][j].val = max(
-					tmp[MIN], rcvreq[MIN][j].val - del);
+			if (tmp[MAX] < rcvreq[MAX][j].val - del) {
+				driver.first->PinData[driver.second].tmp_req[MAX][j].val =
+						tmp[MAX];
+			} else {
+				driver.first->PinData[driver.second].tmp_req[MAX][j].val =
+						rcvreq[MAX][j].val - del;
+				driver.first->PinData[driver.second].tmp_req[MAX][j].tag =
+						rcvreq[MAX][j].tag;
+			}
+			if (tmp[MIN] > rcvreq[MIN][j].val - del) {
+				driver.first->PinData[driver.second].tmp_req[MIN][j].val =
+						tmp[MIN];
+			} else {
+				driver.first->PinData[driver.second].tmp_req[MIN][j].val =
+						rcvreq[MIN][j].val - del;
+				driver.first->PinData[driver.second].tmp_req[MAX][j].tag =
+						rcvreq[MAX][j].tag;
+			}
 		}
 		driver.first->PinData[driver.second].CalcTmpMarg();
 		driver.first->PinData[driver.second].updateWC();
@@ -114,16 +128,17 @@ list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
 	return j;
 }
 
-void Net::RecordBS(_PATH* pPA,path_vec::iterator PA, list<receiver*>::iterator ref,
-		margin refm, PriorityQ<branchslack,BRANCHCompare>& BS, MAXMIN MODE, Tr state) {
+void Net::RecordBS(_PATH* pPA, path_vec::iterator PA,
+		list<receiver*>::iterator ref, margin refm,
+		PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state) {
 	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
 	for (auto i = this->receivers.begin(); i != this->receivers.end(); i++) {
 		if (ref != i && (*i)->cell->visittime > resettime) {
-			margin tmp =
-					refmarg -(*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state] ;
+			margin tmp = refmarg
+					- (*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state];
 			if (tmp > 0)
 				continue;
-			branchslack bs(pPA,(*PA), tmp, refm, i,state);
+			branchslack bs(pPA, (*PA), tmp, refm, i, state);
 			BS.Add(bs);
 		}
 	}

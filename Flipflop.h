@@ -6,25 +6,19 @@
 
 class FlipFlop: public Cell {
 public:
-	bool visited;
-	delay setup[4];
-	delay hold[4];
-
+	delay setup[2][2];
+	delay hold[2][2];
 	FlipFlop(cellType type, string name, string logic_string) {
 		this->type = type;
 		this->name = name;
 		this->visited = false;
 	}
-	virtual ~FlipFlop() {
-	}
-	;
+	virtual ~FlipFlop()=default;
 
-	void setSetup(MAXMIN AnlsType, InOutTr Tr, int val);
-
-	int getSetup(MAXMIN AnlsType, InOutTr Tr);
-	void setHold(MAXMIN AnlsType, InOutTr Tr, int val);
-
-	int getHold(MAXMIN AnlsType, InOutTr Tr);
+	void setSetup(MAXMIN AnlsType, Tr Tr, delay val);
+	int getSetup(MAXMIN AnlsType, Tr Tr);
+	void setHold(MAXMIN AnlsType, Tr Tr, delay val);
+	int getHold(MAXMIN AnlsType, Tr Tr);
 	clockdat* getClkdat();
 
 };

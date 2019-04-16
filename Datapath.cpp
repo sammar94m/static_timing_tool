@@ -38,10 +38,14 @@ void dataPathDelayCalc() {
 		BuildPartialPATHS(P[MIN], PQ_BS[MIN], PQ_P[MIN], MIN);
 		cout <<endl<<endl;
 	}
-	cout << "		MAX PATHS" << endl;
 
+	cout << "		MAX PATHS" << endl;
+	cout<<"Main CLK high"<<((inputNet*)mainClk)->high<<" low "<<((inputNet*)mainClk)->low<<endl;
+	cout<<endl;
 	PQ_P[MAX].Print(MAX);
 	cout <<endl<<endl;
+	cout<<"Main CLK high "<<((inputNet*)mainClk)->high<<" low "<<((inputNet*)mainClk)->low<<endl;
+	cout<<endl;
 	cout << "		MIN PATHS" << endl;
 	PQ_P[MIN].Print(MIN);
 }
@@ -214,7 +218,9 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 		cout << "		Building Critical Path: " << inNet->name <<" ID:"<<PA->id<<" MARG:"<<PATHMARG<< endl;
 		numPath++;
 		pPATHvec.push_back(PA);
-		BSAux(inNet, M, PA, PATHMARG, maxdiscovered, BS, numbranch);
+		auto Rcvit = inNet->getCritReciever(M);
+		Tr tr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
+		BSAux(inNet, M, PA, PATHMARG, maxdiscovered, BS, numbranch,true,tr);
 
 	}
 }

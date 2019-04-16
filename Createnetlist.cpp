@@ -31,7 +31,7 @@ void decreate_table(T*** arr, int n);
 
 vector<string> readLine(ifstream& myfile);
 cellType string_to_cellType(string s);
-
+Net* mainClk;
 //--------------------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------------------
@@ -188,6 +188,9 @@ void DesignConstraintsFile(const string& filename) {
 							HIGH, LOW);
 					NetsTable[name] = net;
 					InputTable.push(net);
+					if(name=="CLK"){
+						mainClk=net;
+					}
 					if (isClk) {
 						InputClkTable.push(net);
 					} else {

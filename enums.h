@@ -82,6 +82,7 @@ extern queue<Net*> InputDataTable;
 extern vector<Net*> OutputTable;
 extern unsigned int numofpaths;
 extern time_t resettime;
+extern Net* mainClk;
 
 #endif
 

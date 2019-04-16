@@ -32,6 +32,7 @@ public:
 				Req.tmp_TR[i][j] = (j == FALL) ? FALL : RISE;
 			}
 		}
+		Req.align_req();
 		Req.updateWC();
 	}
 	;

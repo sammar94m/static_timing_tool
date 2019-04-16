@@ -115,12 +115,14 @@ void Cell::CalcOutputData() {
 					if (i == MAX) {
 						if (tmp_del > Dat.tmp_vld[i][j].val) {
 							Dat.tmp_vld[i][j].val = tmp_del;
+							Dat.tmp_vld[i][j].tag = PinData[in_Pin].tmp_vld[i][q].tag;
 							Dat.tmp_TR[i][j] = q;
 						}
 						Dat.tmp_slope[i][j] = max(tmp_slp, Dat.tmp_slope[i][j]);
 					} else {
 						if (tmp_del < Dat.tmp_vld[i][j].val) {
 							Dat.tmp_vld[i][j].val = tmp_del;
+							Dat.tmp_vld[i][j].tag = PinData[in_Pin].tmp_vld[i][q].tag;
 							Dat.tmp_TR[i][j] = q;
 						}
 						Dat.tmp_slope[i][j] = min(tmp_slp, Dat.tmp_slope[i][j]);
@@ -158,7 +160,7 @@ void Cell::CalReq(pin in, pin out, required (&inreq)[2][2],
 			tmp[i][j] = DelCache[key]; //TODO: fix missing tr
 		}
 	}
-	int tmp_req[2][2] = { INT_MIN, INT_MIN, INT_MAX, INT_MAX };
+	delay tmp_req[2][2] = { INT_MIN, INT_MIN, INT_MAX, INT_MAX };
 	for (const auto j : { FALL, RISE }) { //output transition
 		for (const auto q : { FALL, RISE }) { // input transition
 			InOutTr ioTr = GetInOut(q, j);

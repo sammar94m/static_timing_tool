@@ -2,6 +2,10 @@
 #define PIN_H_
 
 #include "enums.h"
+template<class T>
+void align( T (&source)[2][2]);
+template<class T>
+T unalign(T source);
 
 class PinDat {
 
@@ -58,13 +62,12 @@ public:
 	Tr GETWCTrTmp(MAXMIN M) {
 		return tmp_marg[M][FALL] > tmp_marg[M][RISE] ? RISE : FALL;
 	}
-	void CalcTmpMarg() {
-		for (auto& i : { FALL, RISE }) {
-			tmp_marg[MAX][i] = tmp_req[MAX][i].val - tmp_vld[MAX][i].val;
-			tmp_marg[MIN][i] = tmp_vld[MIN][i].val - tmp_req[MIN][i].val;
+	required getUnalReq(MAXMIN M, Tr tr);
+	valid getUnalVld(MAXMIN M, Tr tr);
+	void align_req();
+	void align_vld();
 
-		}
-	}
+	void CalcTmpMarg();
 };
 
 #endif
