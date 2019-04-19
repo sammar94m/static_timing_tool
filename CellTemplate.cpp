@@ -5,40 +5,30 @@
  *      Author: Sammar
  */
 #include "CellTemplate.h"
+#include "Table.h"
 
 CellTemplate::CellTemplate(string name) :
 		template_name(name) {
-	for (int i = 0; i < 4; i++) {
-		setupdata[i] = -1;
-	}
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 2; j++) {
+			setupdata[i][j] = -1;
+		}
 
+	}
 }
 CellTemplate::~CellTemplate() {
 }
 
-
-bool CellTemplate::withinboundry(int ida, bool exacta) {
-	if (ida == 0 && exacta == false) {
-		return false;
-	} else if (ida == -1) {
-		return false;
-	} else {
-		return true;
-	}
+delay CellTemplate::getDelay(input_pin in, output_pin out, MAXMIN AnlsType,
+		InOutTr Tr, slope inslope, load outload) {
+	delay res=this->delayTable[pair<input_pin, output_pin>(in,out)].GetTableVal(AnlsType,Tr,inslope,outload);
+	return res;
 }
-template<typename T>
-int CellTemplate::getClosestindex(vector<T>& vec, int val, bool& exact) {
-	for (int i = 0; i < vec.size(); i++) {
-		if (vec[i] == val) {
-			exact = true;
-			return i;
-		} else if (vec[i] > val) {
-			exact = false;
-			return i;
-		}
-	}
-	exact = false;
-	return -1;
+
+slope CellTemplate::getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
+		InOutTr Tr, slope inslope, load outload) {
+	slope res=this->slopeTable[pair<input_pin, output_pin>(in,out)].GetTableVal(AnlsType,Tr,inslope,outload);
+	return res;
 }
 
 void CellTemplate::print() {
@@ -73,5 +63,14 @@ void CellTemplate::print() {
 		it->second.print();
 	}
 
+}
+
+bool CellTemplate::TableExists(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr) {
+	for(auto& it : delayTable){
+		if(it.first.first==in && it.first.second==out){
+			return it.second.TableExists(AnlsType,Tr);
+		}
+	}
+	return false;
 }
 

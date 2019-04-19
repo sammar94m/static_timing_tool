@@ -40,7 +40,6 @@ typedef std::string input_pin;
 typedef std::string output_pin;
 typedef std::string pin;
 
-
 typedef enum Timetag_ {
 	BF, BR, AF, AR
 } timetag;
@@ -66,9 +65,6 @@ typedef enum _MAXMIN {
 	MIN, MAX
 } MAXMIN;
 
-enum FlopSetup {
-	MAX_RR, MAX_FR, MIN_RR, MIN_FR
-};
 
 typedef enum _netType {
 	LOCAL, INPUT, OUTPUT
@@ -78,7 +74,7 @@ InOutTr GetInOut(Tr in, Tr out);
 //global
 extern map<int, string> MAXpaths;
 extern map<int, string> MINpaths;
-extern queue<Net*> InputDataTable;
+extern vector<Net*> InputDataTable;
 extern vector<Net*> OutputTable;
 extern unsigned int numofpaths;
 extern time_t resettime;

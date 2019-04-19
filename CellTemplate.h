@@ -12,19 +12,16 @@ public:
 	map<pin, load> temp_pinLoadMap;
 	vector<slope> IN_SLOPE_POINTS;
 	vector<load> OUT_LOAD_POINTS;
-	int setupdata[4]; //
+	delay setupdata[2][2]; //
 	string template_name;
 	CellTemplate(string name);
 	virtual ~CellTemplate();
 	delay getDelay(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 			slope inslope, load outload);
-	delay getSlope(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
+	slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 			slope inslope, load outload);
-	bool withinboundry(int ida, bool exacta);
-	template<typename T>
-	int getClosestindex(vector<T>& vec, int val, bool& exact);
-
 	void print();
+	bool TableExists(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr);
 };
 
 #endif

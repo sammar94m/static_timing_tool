@@ -24,8 +24,8 @@ class C_NODE: public _NODE {
 public:
 	Cell* _cell;
 	delay _delay;
-	C_NODE(Cell* pCell,delay delay) :
-			_cell(pCell),_delay(delay) {
+	C_NODE(Cell* pCell, delay delay) :
+			_cell(pCell), _delay(delay) {
 
 	}
 	void print(MAXMIN M);
@@ -35,8 +35,8 @@ public:
 	pin _pin;
 	PinDat T_DAT;
 	Tr _state;
-	P_NODE(pin p, PinDat& d,Tr state ) :
-			_pin(p), T_DAT(d),_state(state) {
+	P_NODE(pin p, PinDat& d, Tr state) :
+			_pin(p), T_DAT(d), _state(state) {
 
 	}
 	void print(MAXMIN M);
@@ -46,8 +46,8 @@ public:
 	Net* _net;
 	delay _delay;
 	slope _inslope;
-	N_NODE(Net* n,delay del,slope slp=0) :
-			_net(n),_delay(del),_inslope(slp){
+	N_NODE(Net* n, delay del, slope slp = 0) :
+			_net(n), _delay(del), _inslope(slp) {
 
 	}
 	void print(MAXMIN M);
@@ -60,7 +60,7 @@ public:
 	margin marg;
 	path_vec vec;
 	_PATH(margin _marg) :
-		id(0),marg(_marg) {
+			id(0), marg(_marg) {
 
 	}
 	bool operator <(const _PATH& rhs) const {
@@ -70,19 +70,15 @@ public:
 	void print(MAXMIN M) {
 		cout << "Path id: " << id << endl;
 		cout << "MARGIN: " << marg << endl;
-		cout << "OBJ	"
-		<<"NAME	"
-		<<"SLOPE	"
-		<<"DELAY	"
-		<<"STATE	"
-		<<"WC_VLD	"
-		<<"WC_REQ	"<<endl;
+		cout << "OBJ	" << "NAME	" << "SLOPE	" << "DELAY	" << "STATE	"
+				<< "WC_VLD	" << "WC_REQ	" << endl;
 		for (auto i : vec) {
 			i->print(M);
 		}
+		cout << endl;
 	}
-	virtual ~_PATH()=default;
-	margin GetMarg(){
+	virtual ~_PATH() = default;
+	margin GetMarg() {
 		return this->marg;
 	}
 };
@@ -93,7 +89,7 @@ public:
 			_PATH(_marg) {
 		id = ++counter;
 	}
-	void print(){
+	void print() {
 		_PATH::print(MAX);
 	}
 };
@@ -105,16 +101,14 @@ public:
 			_PATH(_marg) {
 		id = ++counter;
 	}
-	void print(){
+	void print() {
 		_PATH::print(MIN);
 	}
 };
-struct PATHCompare
-{
-    bool operator()(const _PATH* e1, const _PATH* e2) const
-    {
-        return e1->marg > e2->marg;
-    }
+struct PATHCompare {
+	bool operator()(const _PATH* e1, const _PATH* e2) const {
+		return e1->marg > e2->marg;
+	}
 };
 class branchslack {
 public:
@@ -124,31 +118,29 @@ public:
 	margin _diffslack;
 	list<receiver*>::iterator _prcv;
 	Tr _state;
-	branchslack(_PATH* PA,_NODE* pN, margin diffslack, margin slack,
-			list<receiver*>::iterator& p,Tr state);
+	branchslack(_PATH* PA, _NODE* pN, margin diffslack, margin slack,
+			list<receiver*>::iterator& p, Tr state);
 
 	bool operator <(const branchslack& rhs) const {
 		return this->_slackofpath - this->_diffslack
 				< rhs._slackofpath - rhs._diffslack; // max heap TODO: CHECK IF MAX HEAP
 	}
-	margin GetMarg() const{
+	margin GetMarg() const {
 		return this->_slackofpath - this->_diffslack;
 	}
 	void print(MAXMIN M);
 
 };
-struct BRANCHCompare
-{
-    bool operator()(const branchslack &e1, const branchslack &e2) const
-    {
-        return e1.GetMarg() > e2.GetMarg();
-    }
+struct BRANCHCompare {
+	bool operator()(const branchslack &e1, const branchslack &e2) const {
+		return e1.GetMarg() > e2.GetMarg();
+	}
 };
 template<class T, typename C>
 class PriorityQ {
 public:
 	unsigned int MAX_SIZE;
-	boost::heap::priority_queue<T,boost::heap::compare<C>> PQ;
+	boost::heap::priority_queue<T, boost::heap::compare<C>> PQ;
 	PriorityQ(unsigned int _MAX_SIZE) :
 			MAX_SIZE(_MAX_SIZE) {
 	}
@@ -165,8 +157,8 @@ public:
 	int getSize() {
 		return PQ.size();
 	}
-	bool isFull(){
-		return PQ.size()==MAX_SIZE;
+	bool isFull() {
+		return PQ.size() == MAX_SIZE;
 	}
 	void Print(MAXMIN M) const;
 };

@@ -2,7 +2,6 @@
 #define CELL_H_
 #include "netfwd.h"
 #include "enums.h"
-#include "Clockdat.h"
 #include "CellTemplate.h"
 #include "Table.h"
 #include "Pin.h"
@@ -38,20 +37,20 @@ public:
 			InOutTr Tr, slope inslope, load outload);
 	virtual slope getSlope(input_pin in, output_pin out, MAXMIN AnlsType,
 			InOutTr Tr, slope inslope, load outload);
-	bool PossiblTr(input_pin in, output_pin out, InOutTr Tr);
+	bool PossiblTr(input_pin in, output_pin out,MAXMIN M, InOutTr Tr);
 
 	void updateWCdat(pin PIN, margin Margin, MAXMIN mode,
 			InOutTr Tr/*FALL OR RISE*/);
 	margin getWCdat(input_pin input, MAXMIN MODE);
-	bool isReady();
+	virtual bool isReady();
 	void print();
 	void CalcOutputData();
 	int getnumofinputs();
 	void resetReq();
 	void CalcInputReq();
-	void RecordBS(PriorityQ<branchslack,BRANCHCompare>& Q, MAXMIN M);
-	void CalReq(pin in, pin out, required (&inreq)[2][2],
-			 Tr (&inTr)[2][2],const required (&outreq)[2][2]);
+	void RecordBS(PriorityQ<branchslack, BRANCHCompare>& Q, MAXMIN M);
+	void CalReq(pin in, pin out, required (&inreq)[2][2], Tr (&inTr)[2][2],
+			const required (&outreq)[2][2]);
 	pin getWCpin(MAXMIN);
 };
 

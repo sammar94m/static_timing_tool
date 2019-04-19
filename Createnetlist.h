@@ -13,7 +13,7 @@
 #include "InputNet.h"
 #include "Net.h"
 #include "enums.h"
-
+#include "Flipflop.h"
 #define BUFFZISE 1024
 //global
 extern int pathidmax;
@@ -21,9 +21,9 @@ extern int pathidmin;
 extern map<int, string> MAXpaths;
 extern map<int, string> MINpaths;
 
-extern queue<Net*> InputTable;
-extern queue<Net*> InputDataTable;
-extern queue<Net*> InputClkTable;
+extern vector<Net*> InputTable;
+extern vector<Net*> InputDataTable;
+extern vector<Net*> InputClkTable;
 extern vector<Net*> OutputTable;
 extern map<string, Net*> NetsTable;
 extern map<string, Cell*> CellsTable;
@@ -37,5 +37,6 @@ void DesignConstraintsFile(const string& filename);
 void LibraryFile(const string& filename);
 
 void dfsPrint();
+void MarkClks();
 
 #endif /* CREATENETLIST_H_ */

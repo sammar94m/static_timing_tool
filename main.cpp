@@ -13,19 +13,18 @@ int pathidmin = 0;
 map<int, string> MAXpaths;
 map<int, string> MINpaths;
 
-queue<Net*> InputTable;
-queue<Net*> InputDataTable;
-queue<Net*> InputClkTable;
+vector<Net*> InputTable;
+vector<Net*> InputDataTable;
+vector<Net*> InputClkTable;
 vector<Net*> OutputTable;
 map<string, Net*> NetsTable;
 map<string, Cell*> CellsTable;
 map<string, CellTemplate*> CellTemplateTable;
 
 /* files:
- *  *		LibraryFile.txt
+ *  *	LibraryFile.txt
  *		NetlistFileFormat.txt
  *		DesignConstraintsFile.txt
-
  *		ParasiticsInterconnectFile.txt
  * */
 void printCircuit() {
@@ -164,14 +163,44 @@ void print_command(vector<string>& vec) {
 		cout << "..." << endl;
 		if (vec.size() < 3) {
 			cout << "Enter cell name" << endl;
-		}else{
-			Cell* pCell=CellsTable[vec[2]];
-			for(auto& i : pCell->PinData){
-				cout<<"Pin "<<i.first<<endl;
+		} else {
+			Cell* pCell = CellsTable[vec[2]];
+			for (auto& i : pCell->PinData) {
+				cout << "Pin " << i.first << endl;
 				i.second.Print();
 
 			}
 		}
+	} else if (vec[1] == "template") {
+		if (vec.size() < 3) {
+			cout << "Enter template name" << endl;
+		} else {
+			CellTemplate* pTmp = CellTemplateTable[vec[2]];
+			cout << pTmp->template_name << endl;
+			cout << "IN_SLOPE_POINTS: ";
+			for (auto& s : pTmp->IN_SLOPE_POINTS) {
+				cout << s << " ";
+			}
+			cout << endl;
+			cout << "OUT_LOAD_POINTS: ";
+			for (auto& s : pTmp->OUT_LOAD_POINTS) {
+				cout << s << " ";
+			}
+			cout << endl;
+			for (auto& x : pTmp->delayTable) {
+				cout << "in " << x.first.first << " out " << x.first.second << endl;
+				for (auto& y : x.second._16tables) {
+					for (int i = 0; i < pTmp->IN_SLOPE_POINTS.size(); i++) {
+						for (int j = 0; j < pTmp->OUT_LOAD_POINTS.size(); j++) {
+							cout << y.second[i][j];
+						}
+
+					}
+					cout << endl;
+				}
+			}
+		}
+
 	} else {
 		cout << "what?!" << endl;
 
@@ -213,18 +242,22 @@ void startShellCommands() {
 		}
 	}
 }
-unsigned int numofpaths=4;
+unsigned int numofpaths = 40;
 int main(int argc, char* argv[]) {
 
 	cout << "Reading LibraryFile" << endl;
-	LibraryFile("LibraryFile2.txt");
+	LibraryFile("LibraryFile3.txt");
 	cout << "LibraryFile done" << endl;
 	cout << "Reading DesignConstraintsFile" << endl;
-	DesignConstraintsFile("DesignConstraintsFile2.txt");
+	DesignConstraintsFile("DesignConstraintsFile3.txt");
 	cout << "DesignConstraintsFile done" << endl;
 	cout << "Reading NetlistFileFormat" << endl;
-	NetlistFileFormat("NetlistFileFormat2.txt");
+	NetlistFileFormat("NetlistFileFormat3.txt");
 	cout << "NetlistFileFormat done " << endl;
+	cout << "Reading ParasiticsInterconnectFile" << endl;
+	ParasiticsInterconnectFile("ParasiticsInterconnectFile3.txt");
+	cout << "ParasiticsInterconnectFile done " << endl;
+	MarkClks();
 	cout
 			<< "-----------------------------------------------------------------------"
 			<< endl;

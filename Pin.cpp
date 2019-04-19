@@ -56,8 +56,17 @@ valid PinDat::getUnalVld(MAXMIN M, Tr tr) {
 }
 void PinDat::CalcTmpMarg() {
 	for (auto& i : { FALL, RISE }) {
-		tmp_marg[MAX][i] = tmp_req[MAX][i].val - tmp_vld[MAX][i].val;
-		tmp_marg[MIN][i] = tmp_vld[MIN][i].val - tmp_req[MIN][i].val;
+		if(tmp_req[MAX][i].val==INT_MAX){
+			tmp_marg[MAX][i]=INT_MAX;
+		}else{
+			tmp_marg[MAX][i] = tmp_req[MAX][i].val - tmp_vld[MAX][i].val;
+		}
+
+		if(tmp_req[MIN][i].val==INT_MIN){
+			tmp_marg[MIN][i]=INT_MAX;
+		}else{
+			tmp_marg[MIN][i] = tmp_vld[MIN][i].val - tmp_req[MIN][i].val;
+		}
 
 	}
 }

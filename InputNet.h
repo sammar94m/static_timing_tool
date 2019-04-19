@@ -11,13 +11,11 @@ public:
 	PinDat Ariv;
 	delay low; //clk param
 	delay high; //clk param
-	bool visited;
 	inputNet(string name, bool isClk, slope SL_RISE, slope SL_FALL,
 			string AR_TIME, delay HIGH = 0, delay LOW = 0) :
 			Net(name, INPUT, isClk) {
 		low = LOW;
 		high = HIGH;
-		visited=false;
 		vector<string> tmp;
 		boost::split(tmp, AR_TIME, boost::is_any_of(" \n\r"));
 		int _Ariv = atoi(tmp[0].c_str());
@@ -39,8 +37,8 @@ public:
 				Ariv.tmp_TR[i][j] = (j == FALL) ? FALL : RISE;
 			}
 		}
-		if(name!="CLK"){
-		Ariv.align_vld();
+		if (name != "CLK") {
+			Ariv.align_vld();
 		}
 		Ariv.updateWC(); //TODO: WRITE WC
 

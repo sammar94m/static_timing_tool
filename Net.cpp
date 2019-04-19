@@ -6,13 +6,14 @@
  */
 #include "Net.h"
 #include "Cell.h"
-
+#include "InputNet.h"
+#include "Flipflop.h"
 Net::Net(string _name, netType _type, bool _isClk) :
-		name(_name), type(_type), isClk(_isClk) {
+		name(_name), type(_type), isClk(_isClk),visited(false),visittime(0) {
 }
 
 Net::Net(string name, bool isClk) :
-		name(name), type(_netType::LOCAL), isClk(isClk) {
+		name(name), type(_netType::LOCAL), isClk(isClk),visited(false),visittime(0) {
 }
 
 Net::~Net() {
@@ -57,7 +58,6 @@ void Net::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin) {
 	if (rcv == NULL) {
 		cout << "CALC DREVREQ: error rcv = NULL" << endl;
 	} else {
-		//TODO: fix for fanout
 		delay del = getRcvDelay(rcv, rcvpin);
 		delay tmp[2];
 		for (int j = 0; j < 2; j++) {
@@ -97,6 +97,11 @@ void Net::calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin) {
 			RcvDat.tmp_slope[i][j] = getRcvSlope(RcvDat.tmp_slope[i][j], pCell,
 					inPin);
 			RcvDat.tmp_vld[i][j].val += netDelay;
+			if (this->isClk) {
+				RcvDat.tmp_vld[i][j].val = fmod(RcvDat.tmp_vld[i][j].val,
+						((inputNet*) mainClk)->high
+								+ ((inputNet*) mainClk)->low);
+			}
 		}
 	}
 	RcvDat.updateWC(); //TODO: WRITE WC
@@ -118,6 +123,12 @@ list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
 	list<receiver*> tmp;
 	M = MODE;
 	for (auto i : this->receivers) {
+		if(i->cell->type==FlIPFlOP){
+			if (this->isClk == false
+					&& ((FlipFlop*)(i->cell))->endpoint == false) {
+				continue;
+			}
+		}
 		if (i->cell->visittime > resettime) {
 			tmp.push_back(i);
 		}
@@ -127,12 +138,33 @@ list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
 
 	return j;
 }
+bool Net::isEndNet(){
+	if(type==OUTPUT){
+		return true;
+	}else{
+		for (auto i : this->receivers) {
+			if(i->cell->type==FlIPFlOP){
+				if (this->isClk == false
+						&& ((FlipFlop*)(i->cell))->endpoint == true) {
+					return true;
+				}
+			}
 
+		}
+	return false;
+	}
+}
 void Net::RecordBS(_PATH* pPA, path_vec::iterator PA,
 		list<receiver*>::iterator ref, margin refm,
 		PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state) {
 	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
 	for (auto i = this->receivers.begin(); i != this->receivers.end(); i++) {
+		if((*i)->cell->type==FlIPFlOP){
+			if (this->isClk == false
+					&& ((FlipFlop*)((*i)->cell))->endpoint == false) {
+				continue;
+			}
+		}
 		if (ref != i && (*i)->cell->visittime > resettime) {
 			margin tmp = refmarg
 					- (*i)->cell->PinData[(*i)->inPin].tmp_marg[MODE][state];

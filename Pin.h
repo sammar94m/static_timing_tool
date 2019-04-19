@@ -3,7 +3,7 @@
 
 #include "enums.h"
 template<class T>
-void align( T (&source)[2][2]);
+void align(T (&source)[2][2]);
 template<class T>
 T unalign(T source);
 

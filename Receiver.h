@@ -13,11 +13,11 @@ public:
 
 	receiver(Cell *cell, input_pin inPin, int slopeDeg = 0, int netDely = 0) :
 			cell(cell), inPin(inPin), slopeDeg(slopeDeg), netDely(netDely) {
-	};
+	}
+	;
 
 	void set_slopeDeg_netDely(string cellName, input_pin pin, delay n_dly,
 			slope s_deg);
-
 
 };
 

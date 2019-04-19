@@ -3,7 +3,6 @@
 #include "cellfwd.h"
 #include "enums.h"
 #include "Receiver.h"
-#include "Clockdat.h"
 #include "Pin.h"
 #include "path.h"
 
@@ -14,6 +13,8 @@ public:
 	bool isClk;
 	pair<Cell*, pin> driver; //cell* is the driver , string is the pin
 	list<receiver*> receivers; //
+	bool visited=false;
+	time_t visittime;
 	//--------------
 	Net(string _name, netType _type, bool _isClk);
 
@@ -34,7 +35,10 @@ public:
 	void calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin);
 	//virtual void print();
 	list<receiver*>::iterator getCritReciever(MAXMIN MODE);
-	void RecordBS(_PATH* pPA,path_vec::iterator PA,list<receiver*>::iterator ref,margin refmarg,PriorityQ<branchslack,BRANCHCompare>& BS,MAXMIN MODE,Tr state);
+	void RecordBS(_PATH* pPA, path_vec::iterator PA,
+			list<receiver*>::iterator ref, margin refmarg,
+			PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state);
+	bool isEndNet();
 };
 
 #endif

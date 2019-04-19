@@ -42,14 +42,12 @@ void N_NODE::print(MAXMIN M) {
 	}
 }
 void P_NODE::print(MAXMIN M) {
-	valid unalvld=T_DAT.getUnalVld(M,_state);
-	required unalrq=T_DAT.getUnalReq(M,_state);
-	cout << "Pin:	" << _pin
-			<< "	" << T_DAT.tmp_slope[M][_state]
-			<< "	-	"<< Trtostring(_state)
-			<< "	" << unalvld.val <<tagtostring(unalvld.tag)
-			<< "	" << unalrq.val <<tagtostring(unalrq.tag)
-			<< "	" << endl;
+	valid unalvld = T_DAT.getUnalVld(M, _state);
+	required unalrq = T_DAT.getUnalReq(M, _state);
+	cout << "Pin:	" << _pin << "	" << T_DAT.tmp_slope[M][_state] << "	-	"
+			<< Trtostring(_state) << "	" << unalvld.val
+			<< tagtostring(unalvld.tag) << "	" << unalrq.val
+			<< tagtostring(unalrq.tag) << "	" << endl;
 }
 branchslack::branchslack(_PATH* PA, _NODE* pN, margin diffslack, margin slack,
 		list<receiver*>::iterator& p, Tr state) :

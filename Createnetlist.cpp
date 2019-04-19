@@ -19,7 +19,7 @@ using namespace boost;
 //const int BUFFZISE = 1000;
 //------------------------------ HELP FUNCTIONS -------------------------------------------
 
-int setupdataIndex(string s);
+void setupdataIndex(string, MAXMIN&, Tr&);
 
 InOutTr getInOutTr(string tr);
 
@@ -119,17 +119,30 @@ void LibraryFile(const string& filename) {
 						throw("invalid AnlsType");
 
 					InOutTr Tr = getInOutTr(tableSpec[3]);
-
+//					cout<< " Creating Table"<<" MODE "<<AnlsType<<" TR "<<Tr<<endl;
 					if (tableSpec[0] == "DELAY") {
 						cellTemplate->delayTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((delay**) table,
 								AnlsType, Tr, rows, cols);
+						cellTemplate->delayTable[pair<input_pin, output_pin>(
+								inpin, outpin)].IN_SLOPE_POINTS_PTR =
+								&(cellTemplate->IN_SLOPE_POINTS);
+						cellTemplate->delayTable[pair<input_pin, output_pin>(
+								inpin, outpin)].OUT_LOAD_POINTS_PTR =
+								&(cellTemplate->OUT_LOAD_POINTS);
+
 						table = NULL;
 
 					} else {
 						cellTemplate->slopeTable[pair<input_pin, output_pin>(
 								inpin, outpin)].AddTable((slope**) table,
 								AnlsType, Tr, rows, cols);
+						cellTemplate->slopeTable[pair<input_pin, output_pin>(
+								inpin, outpin)].IN_SLOPE_POINTS_PTR =
+								&(cellTemplate->IN_SLOPE_POINTS);
+						cellTemplate->slopeTable[pair<input_pin, output_pin>(
+								inpin, outpin)].OUT_LOAD_POINTS_PTR =
+								&(cellTemplate->OUT_LOAD_POINTS);
 						table = NULL;
 
 					}
@@ -141,7 +154,10 @@ void LibraryFile(const string& filename) {
 					int i = 4;
 					while (i--) {
 						vec = readLine(myfile);
-						cellTemplate->setupdata[setupdataIndex(vec[0])] = atoi(
+						MAXMIN mode;
+						Tr tr;
+						setupdataIndex(vec[0], mode, tr);
+						cellTemplate->setupdata[mode][tr] = atoi(
 								vec[1].c_str());
 					}
 				}
@@ -187,14 +203,14 @@ void DesignConstraintsFile(const string& filename) {
 					net = new inputNet(name, isClk, SL_RISE, SL_FALL, AR_TIME,
 							HIGH, LOW);
 					NetsTable[name] = net;
-					InputTable.push(net);
-					if(name=="CLK"){
-						mainClk=net;
+					InputTable.push_back(net);
+					if (name == "CLK") {
+						mainClk = net;
 					}
 					if (isClk) {
-						InputClkTable.push(net);
+						InputClkTable.push_back(net);
 					} else {
-						InputDataTable.push(net);
+						InputDataTable.push_back(net);
 					}
 				}
 
@@ -258,9 +274,14 @@ void NetlistFileFormat(const string& filename) {
 					cout << "error:no such template: " + vec[2] << endl;
 					continue;
 				}
-
-				Cell* cell = new Cell(string_to_cellType(vec[2]), vec[1],
-						ctemplate);
+				Cell* cell;
+				if (string_to_cellType(vec[2]) == FlIPFlOP) {
+					cell = new FlipFlop(string_to_cellType(vec[2]), vec[1],
+							ctemplate);
+				} else {
+					cell = new Cell(string_to_cellType(vec[2]), vec[1],
+							ctemplate);
+				}
 				CellsTable.insert(pair<string, Cell*>(vec[1], cell));
 				while (!myfile.eof()) {
 					vec = readLine(myfile);
@@ -322,19 +343,18 @@ void ParasiticsInterconnectFile(const string& filename) {
 			}
 
 			if (vec[0] == "NET") {
-				net = NetsTable[vec[2]];
+				net = NetsTable[vec[1]];
 				if (!net) {
-					cout << "net " << vec[2] << " not found in NetsTable"
+					cout << "net " << vec[1] << " not found in NetsTable"
 							<< endl;
 				}
 			} else if (net) {
-				if (net->driver.first->name == vec[0] && net->name == vec[1]) {
-					for (auto itr = net->receivers.begin();
-							itr != net->receivers.end(); ++itr) {
 
-						(*itr)->set_slopeDeg_netDely(vec[2], vec[3],
-								atoi(vec[4].c_str()), atoi(vec[5].c_str()));
-					}
+				for (auto itr = net->receivers.begin();
+						itr != net->receivers.end(); ++itr) {
+
+					(*itr)->set_slopeDeg_netDely(vec[2], vec[3],
+							atoi(vec[4].c_str()), atoi(vec[5].c_str()));
 				}
 
 			}
@@ -342,17 +362,45 @@ void ParasiticsInterconnectFile(const string& filename) {
 		}
 	}
 }
+void MarkClks() {
+	queue<Net*> pNetQ;
+	for (auto& e : InputClkTable) {
+		pNetQ.push(e);
 
+	}
+	while (!pNetQ.empty()) {
+		Net* pNet = pNetQ.front();
+		pNetQ.pop();
+		pNet->isClk = true;
+		for (auto& r : pNet->receivers) {
+			if (r->cell->type == FlIPFlOP) {
+				continue;
+			} else {
+				pNetQ.push(r->cell->outNet);
+			}
+		}
+	}
+}
+void setupdataIndex(string s, MAXMIN& M, Tr& tr) { // bug
+	if (s == "MAX_RF") {
+		M = MAX;
+		tr = FALL;
+	}
 
-int setupdataIndex(string s) { // bug
-	if (s == "MAX_RR")
-		return FlopSetup::MAX_RR;
-	if (s == "MAX_FR")
-		return FlopSetup::MAX_FR;
-	if (s == " MIN_RR")
-		return FlopSetup::MIN_RR;
-	else
-		return FlopSetup::MIN_FR;
+	else if (s == "MAX_RR") {
+		M = MAX;
+		tr = RISE;
+	}
+
+	else if (s == " MIN_RR") {
+		M = MIN;
+		tr = RISE;
+	}
+
+	else {
+		M = MIN;
+		tr = FALL;
+	}
 
 }
 
@@ -397,7 +445,7 @@ vector<string> readLine(ifstream & myfile) {
 	string line;
 	getline(myfile, line);
 	string delim = " ():,->";
-	boost::split(vec, line, boost::is_any_of(" ():,->\r"));
+	boost::split(vec, line, boost::is_any_of(" ():,->%\r"));
 
 	for (unsigned int i = 0; i < vec.size(); i++)
 		if (vec[i] != "")

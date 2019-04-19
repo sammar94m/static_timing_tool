@@ -6,24 +6,50 @@
  */
 
 #include "Flipflop.h"
+#include "Net.h"
+#include "InputNet.h"
 
-void FlipFlop::setSetup(MAXMIN AnlsType, Tr Tr, delay val) {
-	setup[AnlsType] [Tr] = val;
+pin FlipFlop::getClkPin() {
+	for (auto& i : inMap) {
+		if (i.second->isClk) {
+			return i.first;
+		}
+	}
+	return "";
 }
 
-int FlipFlop::getSetup(MAXMIN AnlsType, Tr Tr) {
-	return setup[AnlsType][Tr];
-
-}
-void FlipFlop::setHold(MAXMIN AnlsType, Tr Tr, delay val) {
-	setup[AnlsType] [Tr] = val;
+bool FlipFlop::isReady() {
+	//TODO: OVERRIDE FOR FLIPFLOP
+	return ready_inputs == 1;
 }
 
-int FlipFlop::getHold(MAXMIN AnlsType, Tr Tr) {
-	return setup[AnlsType ][Tr];
-
+pin FlipFlop::getDatPin() {
+	for (auto& i : inMap) {
+		if (!i.second->isClk) {
+			return i.first;
+		}
+	}
+	return "";
 }
-clockdat* FlipFlop::getClkdat() {
-	return NULL;
-}
 
+void FlipFlop::initDataReq() {
+	pin clk = getClkPin();
+	pin dat = getDatPin();
+	delay cycletime=((inputNet*)mainClk)->high+((inputNet*)mainClk)->low;
+	if (clk != "" && dat != "") {
+		PinDat& t_clk=this->PinData[clk];
+		PinDat& t_dat=this->PinData[dat];
+		//MAX
+		for(auto& i: {FALL, RISE}){
+			t_dat.tmp_req[MAX][i].val=t_clk.tmp_vld[MAX][RISE].val+cycletime-this->Template->setupdata[MAX][i];
+			t_dat.tmp_req[MAX][i].tag=t_clk.tmp_vld[MAX][RISE].tag;
+		}
+		//MIN
+		for(auto& i: {FALL, RISE}){
+			t_dat.tmp_req[MIN][i].val=t_clk.tmp_vld[MIN][RISE].val+this->Template->setupdata[MIN][i];
+			t_dat.tmp_req[MIN][i].val=t_clk.tmp_vld[MIN][RISE].tag;
+		}
+		t_dat.CalcTmpMarg();
+		t_dat.updateWC();
+	}
+}
