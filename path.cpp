@@ -110,7 +110,7 @@ margin PriorityQ<_PATH*, PATHCompare>::GetMAX() {
 	}
 }
 template<>
-void PriorityQ<branchslack, BRANCHCompare>::Print(MAXMIN M) const {
+void PriorityQ<branchslack, BRANCHCompare_max>::Print(MAXMIN M) const {
 	auto begin = PQ.begin();
 	auto end = PQ.end();
 	for (auto i = begin; i != end; i++) {
@@ -119,11 +119,60 @@ void PriorityQ<branchslack, BRANCHCompare>::Print(MAXMIN M) const {
 	}
 }
 template<>
-void PriorityQ<_PATH*, PATHCompare>::Print(MAXMIN M) const {
+void PriorityQ<_PATH*, PATHCompare_max>::Print(MAXMIN M) const {
 	auto begin = PQ.begin();
 	auto end = PQ.end();
 	for (auto i = begin; i != end; i++) {
 		(*i)->print(M);
 	}
 }
+template<>
+margin PriorityQ<branchslack, BRANCHCompare_max>::GetMIN() {
+	if (PQ.empty()) {
+		return INT_MAX;
+	} else {
+		margin MIN = INT_MAX;
+		auto begin = PQ.begin();
+		auto end = PQ.end();
+		for (auto i = begin; i != end; i++) {
+			MIN = min(MIN, (*i).GetMarg());
+		}
+		return MIN;
+	}
 
+}
+template<>
+margin PriorityQ<_PATH*, PATHCompare_max>::GetMIN() {
+	if (PQ.empty()) {
+		return INT_MAX;
+	} else {
+		margin MIN = INT_MAX;
+		auto begin = PQ.begin();
+		auto end = PQ.end();
+		for (auto i = begin; i != end; i++) {
+			MIN = min(MIN, (*i)->GetMarg());
+		}
+		return MIN;
+	}
+}
+template<>
+margin PriorityQ<branchslack, BRANCHCompare_max>::GetMAX() {
+	if (PQ.empty()) {
+		return INT_MIN;
+	} else {
+		auto& up = PQ.top();
+		return up.GetMarg();
+
+	}
+}
+template<>
+margin PriorityQ<_PATH*, PATHCompare_max>::GetMAX() {
+	if (PQ.empty()) {
+		return INT_MIN;
+	} else {
+		auto& up = PQ.top();
+		return up->GetMarg();
+
+	}
+
+}

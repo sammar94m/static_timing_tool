@@ -156,7 +156,7 @@ bool Net::isEndNet(){
 }
 void Net::RecordBS(_PATH* pPA, path_vec::iterator PA,
 		list<receiver*>::iterator ref, margin refm,
-		PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state) {
+		PriorityQ<branchslack, BRANCHCompare_max>& BS, MAXMIN MODE, Tr state) {
 	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
 	for (auto i = this->receivers.begin(); i != this->receivers.end(); i++) {
 		if((*i)->cell->type==FlIPFlOP){

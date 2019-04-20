@@ -105,9 +105,14 @@ public:
 		_PATH::print(MIN);
 	}
 };
-struct PATHCompare {
+struct PATHCompare { // min heap
 	bool operator()(const _PATH* e1, const _PATH* e2) const {
 		return e1->marg > e2->marg;
+	}
+};
+struct PATHCompare_max { // max heap
+	bool operator()(const _PATH* e1, const _PATH* e2) const {
+		return e1->marg < e2->marg;
 	}
 };
 class branchslack {
@@ -131,9 +136,14 @@ public:
 	void print(MAXMIN M);
 
 };
-struct BRANCHCompare {
+struct BRANCHCompare { // min heap
 	bool operator()(const branchslack &e1, const branchslack &e2) const {
 		return e1.GetMarg() > e2.GetMarg();
+	}
+};
+struct BRANCHCompare_max { // max heap
+	bool operator()(const branchslack &e1, const branchslack &e2) const {
+		return e1.GetMarg() < e2.GetMarg();
 	}
 };
 template<class T, typename C>

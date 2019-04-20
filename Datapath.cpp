@@ -14,8 +14,8 @@ int MIN_PATH::counter = 0;
 MAXMIN GLOBM = MAX;
 void dataPathDelayCalcAux(Net* O, vector<Net*>& INNETS,
 		vector<FlipFlop*>& FFvec, vector<_PATH*> (&P)[2],
-		PriorityQ<branchslack, BRANCHCompare> (&PQ_BS)[2],
-		PriorityQ<_PATH*, PATHCompare> (&PQ_P)[2]) {
+		PriorityQ<branchslack, BRANCHCompare_max> (&PQ_BS)[2],
+		PriorityQ<_PATH*, PATHCompare_max> (&PQ_P)[2]) {
 	GraphPartition(*O, INNETS, FFvec);
 	cout << endl << endl;
 	ForwardPropagateValid(INNETS);
@@ -36,11 +36,11 @@ void dataPathDelayCalc() {
 	//TODO: MARK END FLOP + NET
 	vector<Net*> INNETS;
 	vector<_PATH*> P[2];
-	PriorityQ<branchslack, BRANCHCompare> PQ_BS[2] = { PriorityQ<branchslack,
-			BRANCHCompare>(numofpaths), PriorityQ<branchslack, BRANCHCompare>(
+	PriorityQ<branchslack, BRANCHCompare_max> PQ_BS[2] = { PriorityQ<branchslack,
+			BRANCHCompare_max>(numofpaths), PriorityQ<branchslack, BRANCHCompare_max>(
 			numofpaths) };
-	PriorityQ<_PATH*, PATHCompare> PQ_P[2] = { PriorityQ<_PATH*, PATHCompare>(
-			numofpaths), PriorityQ<_PATH*, PATHCompare>(numofpaths) };
+	PriorityQ<_PATH*, PATHCompare_max> PQ_P[2] = { PriorityQ<_PATH*, PATHCompare_max>(
+			numofpaths), PriorityQ<_PATH*, PATHCompare_max>(numofpaths) };
 	vector<FlipFlop*> FFvec;
 	for (Net* O : OutputTable) {
 		if (O->driver.first == NULL) {
@@ -138,9 +138,10 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 				Cell* currCell = rcv->cell;
 				auto inPin = rcv->inPin;
 				currNet->calcRcvData(rcv, Data, inPin);
-				if (currCell->visittime < resettime) {
-					continue; // Cell isn't connected to current processing output
-				} else if (rcv->cell->type == FlIPFlOP) {
+//				if (currCell->visittime < resettime) {
+//					continue; // Cell isn't connected to current processing output
+//				} else
+				if (rcv->cell->type == FlIPFlOP) {
 					if (currNet->isClk == false
 							&& ((FlipFlop*) currCell)->endpoint == false) {
 						continue;
@@ -242,7 +243,7 @@ bool CompInNets(Net* lhs, Net* rhs) {
 			< ((inputNet*) rhs)->Ariv.GetWCTmpMarg(GLOBM);
 }
 void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
-		MAXMIN M, PriorityQ<branchslack, BRANCHCompare>& BS) {
+		MAXMIN M, PriorityQ<branchslack, BRANCHCompare_max>& BS) {
 	GLOBM = M;
 	margin maxdiscovered = INT_MIN;
 	unsigned int numPath = 0;
@@ -284,7 +285,7 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 	}
 }
 void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
-		margin& maxdiscovered, PriorityQ<branchslack, BRANCHCompare>& BS,
+		margin& maxdiscovered, PriorityQ<branchslack, BRANCHCompare_max>& BS,
 		unsigned int& numbranch, bool enforcestate, Tr state) {
 //TODO: FIX STATE ENFORCEMENT
 	Net* pN = inNet;
@@ -339,9 +340,9 @@ void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
 		}
 	}
 }
-void AddMin(PriorityQ<_PATH*, PATHCompare>& PAQ_d,
-		PriorityQ<_PATH*, PATHCompare>& PAQ_s,
-		PriorityQ<branchslack, BRANCHCompare>& BSQ_s, MAXMIN M) {
+void AddMin(PriorityQ<_PATH*, PATHCompare_max>& PAQ_d,
+		PriorityQ<_PATH*, PATHCompare_max>& PAQ_s,
+		PriorityQ<branchslack, BRANCHCompare_max>& BSQ_s, MAXMIN M) {
 	cout << "PAQ_s min is " << PAQ_s.GetMIN() << " BSQ_s min is "
 			<< BSQ_s.GetMIN() << endl;
 	if (PAQ_s.GetMIN() < BSQ_s.GetMIN()) { //one of them isn't empty
@@ -397,9 +398,9 @@ void AddMin(PriorityQ<_PATH*, PATHCompare>& PAQ_d,
 	}
 }
 void BuildPartialPATHS(vector<_PATH*>& pPATHvec,
-		PriorityQ<branchslack, BRANCHCompare>& BSQ,
-		PriorityQ<_PATH*, PATHCompare>& PAQ, MAXMIN M) {
-	PriorityQ<_PATH*, PATHCompare> PAQ_local(pPATHvec.size());
+		PriorityQ<branchslack, BRANCHCompare_max>& BSQ,
+		PriorityQ<_PATH*, PATHCompare_max>& PAQ, MAXMIN M) {
+	PriorityQ<_PATH*, PATHCompare_max> PAQ_local(pPATHvec.size());
 //copy paths to queue
 	for (auto& e : pPATHvec) {
 		PAQ_local.Add(e);

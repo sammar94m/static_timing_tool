@@ -37,7 +37,7 @@ public:
 	list<receiver*>::iterator getCritReciever(MAXMIN MODE);
 	void RecordBS(_PATH* pPA, path_vec::iterator PA,
 			list<receiver*>::iterator ref, margin refmarg,
-			PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state);
+			PriorityQ<branchslack, BRANCHCompare_max>& BS, MAXMIN MODE, Tr state);
 	bool isEndNet();
 };
 

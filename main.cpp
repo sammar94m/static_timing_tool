@@ -242,7 +242,7 @@ void startShellCommands() {
 		}
 	}
 }
-unsigned int numofpaths = 40;
+unsigned int numofpaths = 4;
 int main(int argc, char* argv[]) {
 
 	cout << "Reading LibraryFile" << endl;
