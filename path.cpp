@@ -13,26 +13,28 @@ string Trtostring(Tr tr) {
 
 	}
 }
-string tagtostring(Timetag_ tag) {
-	switch (tag) {
-	case AF:
-		return "AF";
-		break;
-	case BF:
-		return "BF";
-		break;
-	case BR:
-		return "BR";
-		break;
-	default:
-		return "AR";
-	}
-}
+//string tagtostring(Timetag_ tag) {
+//	switch (tag) {
+//	case AF:
+//		return "AF";
+//		break;
+//	case BF:
+//		return "BF";
+//		break;
+//	case BR:
+//		return "BR";
+//		break;
+//	default:
+//		return "AR";
+//	}
+//}
 
 void C_NODE::print(MAXMIN M) {
 	cout << "Cell:	" << _cell->name << "	-	" << _delay << "	-" << endl;
 }
-
+void C_NODE::print(MAXMIN M,ofstream& f) {
+	f << "Cell:	" << _cell->name << "	-	" << _delay << "	-" << endl;
+}
 void N_NODE::print(MAXMIN M) {
 	if (_net->type == INPUT) {
 		cout << "Net:	" << _net->name << "	" << _inslope << "	" << _delay
@@ -41,10 +43,26 @@ void N_NODE::print(MAXMIN M) {
 		cout << "Net:	" << _net->name << "	-	" << _delay << "	-" << endl;
 	}
 }
+void N_NODE::print(MAXMIN M,ofstream& f) {
+	if (_net->type == INPUT) {
+		f << "Net:	" << _net->name << "	" << _inslope << "	" << _delay
+				<< "	-" << endl;
+	} else {
+		f << "Net:	" << _net->name << "	-	" << _delay << "	-" << endl;
+	}
+}
 void P_NODE::print(MAXMIN M) {
 	valid unalvld = T_DAT.getUnalVld(M, _state);
 	required unalrq = T_DAT.getUnalReq(M, _state);
 	cout << "Pin:	" << _pin << "	" << T_DAT.tmp_slope[M][_state] << "	-	"
+			<< Trtostring(_state) << "	" << unalvld.val
+			<< tagtostring(unalvld.tag) << "	" << unalrq.val
+			<< tagtostring(unalrq.tag) << "	" << endl;
+}
+void P_NODE::print(MAXMIN M,ofstream& f) {
+	valid unalvld = T_DAT.getUnalVld(M, _state);
+	required unalrq = T_DAT.getUnalReq(M, _state);
+	f << "Pin:	" << _pin << "	" << T_DAT.tmp_slope[M][_state] << "	-	"
 			<< Trtostring(_state) << "	" << unalvld.val
 			<< tagtostring(unalvld.tag) << "	" << unalrq.val
 			<< tagtostring(unalrq.tag) << "	" << endl;
@@ -110,7 +128,7 @@ margin PriorityQ<_PATH*, PATHCompare>::GetMAX() {
 	}
 }
 template<>
-void PriorityQ<branchslack, BRANCHCompare_max>::Print(MAXMIN M) const {
+void PriorityQ<branchslack, BRANCHCompare>::Print(MAXMIN M) const {
 	auto begin = PQ.begin();
 	auto end = PQ.end();
 	for (auto i = begin; i != end; i++) {
@@ -119,11 +137,25 @@ void PriorityQ<branchslack, BRANCHCompare_max>::Print(MAXMIN M) const {
 	}
 }
 template<>
-void PriorityQ<_PATH*, PATHCompare_max>::Print(MAXMIN M) const {
+void PriorityQ<_PATH*, PATHCompare>::Print(MAXMIN M) const {
 	auto begin = PQ.begin();
 	auto end = PQ.end();
 	for (auto i = begin; i != end; i++) {
 		(*i)->print(M);
+	}
+}
+template<>
+void PriorityQ<_PATH*, PATHCompare>::Print(MAXMIN M,ofstream& f) {
+
+	int count=PQ.size();
+	int j=0;
+	for (auto i =0; i < count; i++) {
+		PQ.top()->print(M,f);
+		j++;
+		PQ.pop();
+		if(j==numofpaths){
+			return;
+		}
 	}
 }
 template<>

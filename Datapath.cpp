@@ -14,33 +14,30 @@ int MIN_PATH::counter = 0;
 MAXMIN GLOBM = MAX;
 void dataPathDelayCalcAux(Net* O, vector<Net*>& INNETS,
 		vector<FlipFlop*>& FFvec, vector<_PATH*> (&P)[2],
-		PriorityQ<branchslack, BRANCHCompare_max> (&PQ_BS)[2],
-		PriorityQ<_PATH*, PATHCompare_max> (&PQ_P)[2]) {
+		PriorityQ<branchslack, BRANCHCompare> (&PQ_BS)[2],
+		PriorityQ<_PATH*, PATHCompare> (&PQ_P)[2]) {
 	GraphPartition(*O, INNETS, FFvec);
 	cout << endl << endl;
 	ForwardPropagateValid(INNETS);
 	cout << endl << endl;
 	BackwardPropagateReq(*O);
 	cout << endl << endl;
-	BuildCritandBS(INNETS, P[MAX], MAX, PQ_BS[MAX]);
-	cout << endl << endl;
-	BuildPartialPATHS(P[MAX], PQ_BS[MAX], PQ_P[MAX], MAX);
-	cout << endl << endl;
-	BuildCritandBS(INNETS, P[MIN], MIN, PQ_BS[MIN]);
-	cout << endl << endl;
-	BuildPartialPATHS(P[MIN], PQ_BS[MIN], PQ_P[MIN], MIN);
-	cout << endl << endl;
+	for (auto i : { MIN, MAX }) {
+		for (auto j : { FALL, RISE }) {
+			BuildCritandBS(INNETS, P[i], i, PQ_BS[i], j);
+			cout << endl << endl;
+			BuildPartialPATHS(P[i], PQ_BS[i], PQ_P[i], i);
+			cout << endl << endl;
+		}
+	}
 	INNETS.clear();
 }
 void dataPathDelayCalc() {
 	//TODO: MARK END FLOP + NET
 	vector<Net*> INNETS;
 	vector<_PATH*> P[2];
-	PriorityQ<branchslack, BRANCHCompare_max> PQ_BS[2] = { PriorityQ<branchslack,
-			BRANCHCompare_max>(numofpaths), PriorityQ<branchslack, BRANCHCompare_max>(
-			numofpaths) };
-	PriorityQ<_PATH*, PATHCompare_max> PQ_P[2] = { PriorityQ<_PATH*, PATHCompare_max>(
-			numofpaths), PriorityQ<_PATH*, PATHCompare_max>(numofpaths) };
+	PriorityQ<branchslack, BRANCHCompare> PQ_BS[2];
+	PriorityQ<_PATH*, PATHCompare> PQ_P[2];
 	vector<FlipFlop*> FFvec;
 	for (Net* O : OutputTable) {
 		if (O->driver.first == NULL) {
@@ -57,18 +54,53 @@ void dataPathDelayCalc() {
 		}
 		FFvec.clear();
 	}
+	cout << "		Outputting results" << endl;
+	OutputResults(PQ_P);
+	cout << "		Done" << endl;
+}
+void OutputResults(PriorityQ<_PATH*, PATHCompare> (&PQ_P)[2]) {
+	ofstream maxpathfile("max_paths.txt", ofstream::out | ofstream::trunc);
+	ofstream minpathfile("min_paths.txt", ofstream::out | ofstream::trunc);
+	ofstream maxpinfile("max_pins.txt", ofstream::out | ofstream::trunc);
+	ofstream minpinfile("min_pins.txt", ofstream::out | ofstream::trunc);
+	//MAX
+	maxpathfile << "		MAX PATHS" << endl;
+	maxpathfile << "Main CLK high " << ((inputNet*) mainClk)->high << " low "
+			<< ((inputNet*) mainClk)->low << endl;
+	maxpathfile << endl;
+	PQ_P[MAX].Print(MAX, maxpathfile);
+	maxpathfile << endl << endl;
+	//MIN
+	minpathfile << "Main CLK high " << ((inputNet*) mainClk)->high << " low "
+			<< ((inputNet*) mainClk)->low << endl;
+	minpathfile << endl;
+	minpathfile << "		MIN PATHS" << endl;
+	PQ_P[MIN].Print(MIN, minpathfile);
+	minpathfile << endl << endl;
+	// PINS
+	maxpinfile<<"NAME	"
+			<<"WC_MARG_FALL	"
+			<<"WC_VLD_FALL	"
+			<<"WC_REQ_FALL	"
+			<<"WC_MARG_RISE	"
+			<<"WC_VLD_RISE	"
+			<<"WC_REQ_RISE	"<<endl;
 
-	cout << "		MAX PATHS" << endl;
-	cout << "Main CLK high " << ((inputNet*) mainClk)->high << " low "
-			<< ((inputNet*) mainClk)->low << endl;
-	cout << endl;
-	PQ_P[MAX].Print(MAX);
-	cout << endl << endl;
-	cout << "Main CLK high " << ((inputNet*) mainClk)->high << " low "
-			<< ((inputNet*) mainClk)->low << endl;
-	cout << endl;
-	cout << "		MIN PATHS" << endl;
-	PQ_P[MIN].Print(MIN);
+	minpinfile<<"NAME	"
+			<<"WC_MARG_FALL	"
+			<<"WC_VLD_FALL	"
+			<<"WC_REQ_FALL	"
+			<<"WC_MARG_RISE	"
+			<<"WC_VLD_RISE	"
+			<<"WC_REQ_RISE	"<<endl;
+	for(auto& c : CellsTable){
+		c.second->printpins(MAX,maxpinfile);
+		c.second->printpins(MIN,minpinfile);
+	}
+	maxpathfile.close();
+	minpathfile.close();
+	maxpinfile.close();
+	minpinfile.close();
 }
 /*Given a cell backward walk to primary inputs and return them in a Q
  * mark the visited cells with time stamps
@@ -194,12 +226,16 @@ void BackwardPropagateReq(Net& OutNet) {
 	queue<Cell*> CellQ; //used to store the discovered Cells
 	if (OutNet.type == OUTPUT) {
 		CellQ.push(OutNet.driver.first);
+		dynamic_cast<outputNet&>(OutNet).Req.CalcTmpMarg();
+		dynamic_cast<outputNet&>(OutNet).Req.updateWC();
 		OutNet.CalcDrvReq(dynamic_cast<outputNet&>(OutNet).Req.tmp_req, NULL,
 				""); //TODO: GET RID OF DYNAMIC CAST
 	} else {
 		for (auto& r : OutNet.receivers) {
 			if (r->cell->type == FlIPFlOP) {
 				if (((FlipFlop*) r->cell)->endpoint) {
+					r->cell->PinData[r->inPin].CalcTmpMarg();
+					r->cell->PinData[r->inPin].updateWC();
 					OutNet.CalcDrvReq(r->cell->PinData[r->inPin].tmp_req,
 							r->cell, r->inPin);
 					break;
@@ -243,7 +279,7 @@ bool CompInNets(Net* lhs, Net* rhs) {
 			< ((inputNet*) rhs)->Ariv.GetWCTmpMarg(GLOBM);
 }
 void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
-		MAXMIN M, PriorityQ<branchslack, BRANCHCompare_max>& BS) {
+		MAXMIN M, PriorityQ<branchslack, BRANCHCompare>& BS, Tr state) {
 	GLOBM = M;
 	margin maxdiscovered = INT_MIN;
 	unsigned int numPath = 0;
@@ -257,15 +293,16 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 	cout << "Starting Path building " << endl;
 	for (auto inNet : pNetVec) {
 		queue<Net*> pNetQ;
-		if ((((inputNet*) inNet)->Ariv.GetWCTmpMarg(M) > maxdiscovered)
+		if ((((inputNet*) inNet)->Ariv.tmp_marg[M][state] > maxdiscovered)
 				&& (numofpaths <= numPath + numbranch)) {
 			cout << "Skipped input: " << inNet->name << " Margin: "
-					<< ((inputNet*) inNet)->Ariv.GetWCTmpMarg(M) << endl;
+					<< ((inputNet*) inNet)->Ariv.tmp_marg[M][state] << endl;
 			return;
 		}
 		//init critical path
-		margin PATHMARG = ((inputNet*) inNet)->Ariv.GetWCTmpMarg(M);
-
+		margin PATHMARG = ((inputNet*) inNet)->Ariv.tmp_marg[M][state];
+		if (PATHMARG >= INT_MAX)
+			continue;
 		maxdiscovered = max(maxdiscovered, PATHMARG);
 
 		_PATH* PA;
@@ -277,21 +314,22 @@ void BuildCritandBS(const vector<Net*>& inputNetVec, vector<_PATH*>& pPATHvec,
 		cout << "		Building Critical Path: " << inNet->name << " ID:" << PA->id
 				<< " MARG:" << PATHMARG << endl;
 		numPath++;
+		auto Rcvit = inNet->getCritReciever(M, state);
+		PA->start = (*Rcvit)->cell->name + "%" + (*Rcvit)->inPin;
 		pPATHvec.push_back(PA);
-		auto Rcvit = inNet->getCritReciever(M);
-		Tr tr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
-		BSAux(inNet, M, PA, PATHMARG, maxdiscovered, BS, numbranch, true, tr);
+		BSAux(inNet, M, PA, PATHMARG, maxdiscovered, BS, numbranch, true,
+				state);
 
 	}
 }
 void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
-		margin& maxdiscovered, PriorityQ<branchslack, BRANCHCompare_max>& BS,
+		margin& maxdiscovered, PriorityQ<branchslack, BRANCHCompare>& BS,
 		unsigned int& numbranch, bool enforcestate, Tr state) {
 //TODO: FIX STATE ENFORCEMENT
 	Net* pN = inNet;
 	while (pN != NULL) {
 		if (!pN->isEndNet()) {
-			auto Rcvit = pN->getCritReciever(M);
+			auto Rcvit = pN->getCritReciever(M, state);
 			cout << "Critical receiver of net: " << pN->name << " is "
 					<< (*Rcvit)->cell->name << endl;
 			Tr tr;
@@ -336,31 +374,43 @@ void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
 			PushNet(*pN, PA, M);
 			cout << "Pushed Net " << pN->name << " to path" << endl;
 
+			receiver* prcv;
+			if ((prcv = pN->GetEnd()) == NULL) {
+				PA->end = pN->driver.first->name + "%" + pN->driver.second;
+			} else {
+				PA->end = prcv->cell->name + "%" + prcv->inPin;
+			}
 			pN = NULL;
 		}
 	}
 }
-void AddMin(PriorityQ<_PATH*, PATHCompare_max>& PAQ_d,
-		PriorityQ<_PATH*, PATHCompare_max>& PAQ_s,
-		PriorityQ<branchslack, BRANCHCompare_max>& BSQ_s, MAXMIN M) {
+void AddMin(PriorityQ<_PATH*, PATHCompare>& PAQ_d,
+		PriorityQ<_PATH*, PATHCompare>& PAQ_s,
+		PriorityQ<branchslack, BRANCHCompare>& BSQ_s, MAXMIN M) {
 	cout << "PAQ_s min is " << PAQ_s.GetMIN() << " BSQ_s min is "
 			<< BSQ_s.GetMIN() << endl;
 	if (PAQ_s.GetMIN() < BSQ_s.GetMIN()) { //one of them isn't empty
-		if (PAQ_s.PQ.empty())
+		if (PAQ_s.PQ.empty()) {
+			BSQ_s.PQ.pop();
 			return;
+		}
 		_PATH* PA = PAQ_s.PQ.top();
 		cout << "PATH " << PA->id << " is critical" << endl;
 		PAQ_s.PQ.pop();
 		PAQ_d.Add(PA);
 	} else { ///build the branch and add to PAQ
-		if (BSQ_s.PQ.empty())
+		if (BSQ_s.PQ.empty()) {
+			PAQ_s.PQ.pop();
 			return;
+		}
 		cout << "	critical branch found - building it " << endl;
 		_PATH* PA;
 		branchslack bs = BSQ_s.PQ.top();
 
 		BSQ_s.PQ.pop();
 		cout << "Poped branchslack Queue" << endl;
+		if (bs.GetMarg() >= INT_MAX)
+			return;
 		bs.print(M);
 		if (M == MAX) {
 			PA = new MAX_PATH(bs.GetMarg());
@@ -368,6 +418,7 @@ void AddMin(PriorityQ<_PATH*, PATHCompare_max>& PAQ_d,
 			PA = new MIN_PATH(bs.GetMarg());
 		}
 		//copy the start of the path
+		PA->start = bs._PA->start;
 		auto end = find(bs._PA->vec.begin(), bs._PA->vec.end(), bs._pN);
 		end++;
 		for (auto i = bs._PA->vec.begin(); i != end; i++) {
@@ -398,16 +449,16 @@ void AddMin(PriorityQ<_PATH*, PATHCompare_max>& PAQ_d,
 	}
 }
 void BuildPartialPATHS(vector<_PATH*>& pPATHvec,
-		PriorityQ<branchslack, BRANCHCompare_max>& BSQ,
-		PriorityQ<_PATH*, PATHCompare_max>& PAQ, MAXMIN M) {
-	PriorityQ<_PATH*, PATHCompare_max> PAQ_local(pPATHvec.size());
+		PriorityQ<branchslack, BRANCHCompare>& BSQ,
+		PriorityQ<_PATH*, PATHCompare>& PAQ, MAXMIN M) {
+	PriorityQ<_PATH*, PATHCompare> PAQ_local;
 //copy paths to queue
 	for (auto& e : pPATHvec) {
 		PAQ_local.Add(e);
 	}
 	cout << "		Adding worst " << numofpaths << " PATHS TO QUEUE" << endl;
 	while (!(PAQ_local.PQ.empty()) || !(BSQ.PQ.empty())) {
-		if (PAQ.isFull()) {
+		if (PAQ.getSize() >= numofpaths) {
 			cout << "PAQ MAX IS " << PAQ.GetMAX() << endl;
 			if (min(PAQ_local.GetMIN(), BSQ.GetMIN()) >= PAQ.GetMAX()) { // all the paths have better margin
 				break;

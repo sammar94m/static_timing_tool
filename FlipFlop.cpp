@@ -49,7 +49,5 @@ void FlipFlop::initDataReq() {
 			t_dat.tmp_req[MIN][i].val=t_clk.tmp_vld[MIN][RISE].val+this->Template->setupdata[MIN][i];
 			t_dat.tmp_req[MIN][i].val=t_clk.tmp_vld[MIN][RISE].tag;
 		}
-		t_dat.CalcTmpMarg();
-		t_dat.updateWC();
 	}
 }

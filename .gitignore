@@ -1,3 +1,7 @@
 /Debug/
 /static_timing_tool.exe
 /out.txt
+/max_paths.txt
+/max_pins.txt
+/min_paths.txt
+/min_pins.txt

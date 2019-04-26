@@ -9,6 +9,7 @@ class outputNet: public Net {
 public:
 	PinDat Req;
 	load outload;
+	inputNet* ref;
 
 	outputNet(string name, bool isClk, string REQ_TIME, load outload) :
 			Net(name, OUTPUT, isClk), outload(outload) {
@@ -32,8 +33,8 @@ public:
 				Req.tmp_TR[i][j] = (j == FALL) ? FALL : RISE;
 			}
 		}
-		Req.align_req();
-		Req.updateWC();
+		ref=(inputNet*)NetsTable[tmp[2].c_str()];
+		Req.align_req(ref);
 	}
 	;
 	void calcRcvData(receiver* pRcv, const PinDat& Data);

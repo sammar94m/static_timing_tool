@@ -82,6 +82,7 @@ void Net::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin) {
 						rcvreq[MAX][j].tag;
 			}
 		}
+		cout<<"updating WC MARG for "<<this->driver.first->name<<"%"<<this->driver.second<<endl;
 		driver.first->PinData[driver.second].CalcTmpMarg();
 		driver.first->PinData[driver.second].updateWC();
 	}
@@ -104,7 +105,6 @@ void Net::calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin) {
 			}
 		}
 	}
-	RcvDat.updateWC(); //TODO: WRITE WC
 	pCell->PinData[inPin] = RcvDat;
 	pCell->ready_inputs++;
 
@@ -115,13 +115,14 @@ PinDat Net::getDrvData() {
 Tr state;
 MAXMIN M;
 bool CompPRcv(receiver* lhs, receiver* rhs) {
-	return lhs->cell->PinData[lhs->inPin].GetWCTmpMarg(M)
-			< rhs->cell->PinData[rhs->inPin].GetWCTmpMarg(M);
+	return lhs->cell->PinData[lhs->inPin].tmp_marg[M][state]
+			< rhs->cell->PinData[rhs->inPin].tmp_marg[M][state];
 }
-list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE) {
+list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE,Tr tr) {
 	list<receiver*>::iterator j;
 	list<receiver*> tmp;
 	M = MODE;
+	state=tr;
 	for (auto i : this->receivers) {
 		if(i->cell->type==FlIPFlOP){
 			if (this->isClk == false
@@ -154,9 +155,25 @@ bool Net::isEndNet(){
 	return false;
 	}
 }
+receiver* Net::GetEnd(){
+	if(type==OUTPUT){
+		return NULL;
+	}else{
+		for (auto i : this->receivers) {
+			if(i->cell->type==FlIPFlOP){
+				if (this->isClk == false
+						&& ((FlipFlop*)(i->cell))->endpoint == true) {
+					return i;
+				}
+			}
+
+		}
+	return NULL;
+	}
+}
 void Net::RecordBS(_PATH* pPA, path_vec::iterator PA,
 		list<receiver*>::iterator ref, margin refm,
-		PriorityQ<branchslack, BRANCHCompare_max>& BS, MAXMIN MODE, Tr state) {
+		PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state) {
 	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
 	for (auto i = this->receivers.begin(); i != this->receivers.end(); i++) {
 		if((*i)->cell->type==FlIPFlOP){

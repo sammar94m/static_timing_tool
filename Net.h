@@ -28,16 +28,17 @@ public:
 	void add_receiver(Cell* cell, pin pin_t);
 	virtual PinDat getDrvData(); // return driver PinDat
 	virtual void CalcDrvReq(const required (&req)[2][2], Cell* rcv, pin rcvpin);
+	receiver* GetEnd();
 	/*
 	 * calculate Netdelay and slope and update reciever pin
 	 * update WC
 	 */
 	void calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin);
 	//virtual void print();
-	list<receiver*>::iterator getCritReciever(MAXMIN MODE);
+	list<receiver*>::iterator getCritReciever(MAXMIN MODE,Tr);
 	void RecordBS(_PATH* pPA, path_vec::iterator PA,
 			list<receiver*>::iterator ref, margin refmarg,
-			PriorityQ<branchslack, BRANCHCompare_max>& BS, MAXMIN MODE, Tr state);
+			PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state);
 	bool isEndNet();
 };
 

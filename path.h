@@ -18,6 +18,7 @@ class _NODE {
 public:
 	_NODE() = default;
 	virtual void print(MAXMIN M)=0;
+	virtual void print(MAXMIN M, ofstream&)=0;
 	virtual ~_NODE() = default;
 };
 class C_NODE: public _NODE {
@@ -29,6 +30,7 @@ public:
 
 	}
 	void print(MAXMIN M);
+	void print(MAXMIN M, ofstream&);
 };
 class P_NODE: public _NODE {
 public:
@@ -40,6 +42,7 @@ public:
 
 	}
 	void print(MAXMIN M);
+	void print(MAXMIN M, ofstream&);
 };
 class N_NODE: public _NODE {
 public:
@@ -51,6 +54,7 @@ public:
 
 	}
 	void print(MAXMIN M);
+	void print(MAXMIN M, ofstream&);
 };
 typedef vector<_NODE*> path_vec;
 
@@ -59,6 +63,8 @@ public:
 	int id;
 	margin marg;
 	path_vec vec;
+	string start;
+	string end;
 	_PATH(margin _marg) :
 			id(0), marg(_marg) {
 
@@ -69,6 +75,7 @@ public:
 	virtual void print()=0;
 	void print(MAXMIN M) {
 		cout << "Path id: " << id << endl;
+		cout << start << " -> " << end << endl;
 		cout << "MARGIN: " << marg << endl;
 		cout << "OBJ	" << "NAME	" << "SLOPE	" << "DELAY	" << "STATE	"
 				<< "WC_VLD	" << "WC_REQ	" << endl;
@@ -76,6 +83,17 @@ public:
 			i->print(M);
 		}
 		cout << endl;
+	}
+	void print(MAXMIN M, ofstream& f){
+		f << "Path id: " << id << endl;
+		f << start << " -> " << end << endl;
+		f << "MARGIN: " << marg << endl;
+		f << "OBJ	" << "NAME	" << "SLOPE	" << "DELAY	" << "STATE	"
+				<< "WC_VLD	" << "WC_REQ	" << endl;
+		for (auto i : vec) {
+			i->print(M,f);
+		}
+		f << endl;
 	}
 	virtual ~_PATH() = default;
 	margin GetMarg() {
@@ -149,28 +167,19 @@ struct BRANCHCompare_max { // max heap
 template<class T, typename C>
 class PriorityQ {
 public:
-	unsigned int MAX_SIZE;
 	boost::heap::priority_queue<T, boost::heap::compare<C>> PQ;
-	PriorityQ(unsigned int _MAX_SIZE) :
-			MAX_SIZE(_MAX_SIZE) {
-	}
+	PriorityQ() = default;
 	void Add(T& obj) {
-		if (PQ.size() == MAX_SIZE) {
-			PQ.push(obj);
-			PQ.pop();
-		} else {
-			PQ.push(obj);
-		}
+
+		PQ.push(obj);
 	}
 	margin GetMIN();
 	margin GetMAX();
 	int getSize() {
 		return PQ.size();
 	}
-	bool isFull() {
-		return PQ.size() == MAX_SIZE;
-	}
 	void Print(MAXMIN M) const;
+	void Print(MAXMIN M,ofstream& file);
 };
 
 #endif /* PATH_H_ */

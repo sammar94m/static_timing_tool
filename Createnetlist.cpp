@@ -317,6 +317,7 @@ void NetlistFileFormat(const string& filename) {
 			}
 		}
 	}
+	myfile.close();
 }
 
 //--------------------------------------------------------------------------------------
@@ -361,6 +362,7 @@ void ParasiticsInterconnectFile(const string& filename) {
 
 		}
 	}
+	myfile.close();
 }
 void MarkClks() {
 	queue<Net*> pNetQ;

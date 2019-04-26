@@ -44,6 +44,7 @@ public:
 	margin getWCdat(input_pin input, MAXMIN MODE);
 	virtual bool isReady();
 	void print();
+	void printpins(MAXMIN M,ofstream& f);
 	void CalcOutputData();
 	int getnumofinputs();
 	void resetReq();

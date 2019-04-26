@@ -6,18 +6,32 @@
  */
 #include "Pin.h"
 #include "InputNet.h"
-
+string tagtostring(Timetag_ tag) {
+	switch (tag) {
+	case AF:
+		return "AF";
+		break;
+	case BF:
+		return "BF";
+		break;
+	case BR:
+		return "BR";
+		break;
+	default:
+		return "AR";
+	}
+}
 template<class T>
-void align(T (&source)[2][2]) {
+void align(T (&source)[2][2], inputNet* ref) {
 	for (auto& i : { MAX, MIN }) {
 		for (auto& j : { FALL, RISE }) {
 			switch (source[i][j].tag) {
 			case AF:
 				source[i][j].val = source[i][j].val
-						+ ((inputNet*) mainClk)->high;
+						+ ref->high;
 				break;
 			case BF:
-				source[i][j].val = ((inputNet*) mainClk)->high
+				source[i][j].val = ref->high
 						- source[i][j].val;
 				break;
 			case BR:
@@ -26,6 +40,9 @@ void align(T (&source)[2][2]) {
 			default:
 				break;
 			}
+			source[i][j].val+=ref->Ariv.tmp_vld[i][RISE].val;
+			source[i][j].val=fmod(source[i][j].val,((inputNet*) mainClk)->high
+					+ ((inputNet*) mainClk)->low);
 		}
 	}
 }
@@ -54,6 +71,12 @@ required PinDat::getUnalReq(MAXMIN M, Tr tr) {
 valid PinDat::getUnalVld(MAXMIN M, Tr tr) {
 	return unalign(tmp_vld[M][tr]);
 }
+required PinDat::getUnalWCReq(MAXMIN M, Tr tr) {
+	return unalign(WC_REQ[M][tr]);
+}
+valid PinDat::getUnalWCVld(MAXMIN M, Tr tr) {
+	return unalign(WC_VLD[M][tr]);
+}
 void PinDat::CalcTmpMarg() {
 	for (auto& i : { FALL, RISE }) {
 		if(tmp_req[MAX][i].val==INT_MAX){
@@ -70,9 +93,28 @@ void PinDat::CalcTmpMarg() {
 
 	}
 }
-void PinDat::align_req() {
-	align(tmp_req);
+void PinDat::align_req(inputNet* ref) {
+	align(tmp_req,ref);
 }
-void PinDat::align_vld() {
-	align(tmp_vld);
+void PinDat::align_vld(inputNet* ref) {
+	align(tmp_vld,ref);
+}
+void PinDat::Print(MAXMIN M, ofstream& f) {
+	f << to_string(WC_MARG[M][FALL])
+			<<",	"
+			<<getUnalWCVld(M,FALL).val
+			<<tagtostring(WC_VLD[M][FALL].tag)
+			<<",	"
+			<<getUnalWCReq(M,FALL).val
+			<<tagtostring(WC_REQ[M][FALL].tag)
+			<<",	"
+			<< to_string(WC_MARG[M][RISE])
+			<<",	"
+			<<getUnalWCVld(M,RISE).val
+			<<tagtostring(WC_VLD[M][RISE].tag)
+			<<",	"
+			<<getUnalWCReq(M,RISE).val
+			<<tagtostring(WC_REQ[M][RISE].tag);
+
+
 }

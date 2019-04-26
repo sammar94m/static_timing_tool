@@ -26,6 +26,7 @@
 #include <boost/lexical_cast.hpp>
 #include <time.h>
 #include "netfwd.h"
+#include "cellfwd.h"
 
 using namespace std;
 
@@ -77,6 +78,8 @@ extern map<int, string> MINpaths;
 extern vector<Net*> InputDataTable;
 extern vector<Net*> OutputTable;
 extern unsigned int numofpaths;
+extern map<string, Net*> NetsTable;
+extern map<string, Cell*> CellsTable;
 extern time_t resettime;
 extern Net* mainClk;
 

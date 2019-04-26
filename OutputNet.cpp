@@ -8,6 +8,7 @@ void outputNet::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv,
 			driver.first->PinData[driver.second].tmp_req[i][j] = rcvreq[i][j];
 		}
 	}
+	cout<<"updating WC MARG for "<<this->driver.first->name<<"%"<<this->driver.second<<endl;
 	driver.first->PinData[driver.second].CalcTmpMarg();
 	driver.first->PinData[driver.second].updateWC();
 }

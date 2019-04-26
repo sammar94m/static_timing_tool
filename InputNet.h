@@ -9,6 +9,7 @@ class inputNet: public Net {
 
 public:
 	PinDat Ariv;
+	inputNet* ref;
 	delay low; //clk param
 	delay high; //clk param
 	inputNet(string name, bool isClk, slope SL_RISE, slope SL_FALL,
@@ -32,15 +33,34 @@ public:
 		for (const auto i : { MAX, MIN }) {
 			for (const auto j : { FALL, RISE }) {
 				Ariv.tmp_slope[i][j] = (j == FALL) ? SL_FALL : SL_RISE;
-				Ariv.tmp_vld[i][j].val = _Ariv;
+
+				if (isClk) {
+					if (j == RISE) {
+						Ariv.tmp_vld[i][j].val = _Ariv;
+					} else {
+						Ariv.tmp_vld[i][j].val = _Ariv+high;
+					}
+				} else {
+					Ariv.tmp_vld[i][j].val = _Ariv;
+				}
 				Ariv.tmp_vld[i][j].tag = edgeref;
 				Ariv.tmp_TR[i][j] = (j == FALL) ? FALL : RISE;
 			}
 		}
 		if (name != "CLK") {
-			Ariv.align_vld();
+			ref = (inputNet*) NetsTable[tmp[2].c_str()];
+			if(ref==NULL){
+			cout<<"ref "<<tmp[2]<<" not found"<<endl;
+			cout<<"using CLK as ref"<<endl;
+			ref=(inputNet*)mainClk;
+			Ariv.align_vld(ref);
+			}else{
+			Ariv.align_vld(ref);
+			}
+		} else {
+			ref = this;
 		}
-		Ariv.updateWC(); //TODO: WRITE WC
+
 
 	}
 	void CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin);

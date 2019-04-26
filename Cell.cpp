@@ -69,8 +69,8 @@ slope Cell::getSlope(input_pin in, output_pin out, MAXMIN AnlsType, InOutTr Tr,
 	return Template->getSlope(in, out, AnlsType, Tr, inslope, outload);
 
 }
-bool Cell::PossiblTr(input_pin in, output_pin out,MAXMIN M, InOutTr Tr) {
-	return this->Template->TableExists(in,out,M,Tr);
+bool Cell::PossiblTr(input_pin in, output_pin out, MAXMIN M, InOutTr Tr) {
+	return this->Template->TableExists(in, out, M, Tr);
 
 }
 InOutTr GetInOut(Tr in, Tr out) {
@@ -107,7 +107,7 @@ void Cell::CalcOutputData() {
 			for (const auto j : { FALL, RISE }) { //output transition
 				for (const auto q : { FALL, RISE }) { // input transition
 					InOutTr ioTr = GetInOut(q, j);
-					if (!PossiblTr(in_Pin, outPin,i, ioTr)) {
+					if (!PossiblTr(in_Pin, outPin, i, ioTr)) {
 						continue;
 					}
 					tmp_slp = getSlope(in_Pin, outPin, i, ioTr,
@@ -139,7 +139,6 @@ void Cell::CalcOutputData() {
 			}
 		}
 	}
-	Dat.updateWC();
 	ready_inputs = 0;
 	visited = true;
 }
@@ -156,6 +155,7 @@ void Cell::CalcInputReq() {
 		}
 
 		CalReq(in_Pin, outPin, inDat.tmp_req, inDat.tmp_TR, Dat.tmp_req);
+		cout<<"updating WC MARG for "<<name<<"%"<<in_Pin<<endl;
 		inDat.CalcTmpMarg();
 		inDat.updateWC();
 	}
@@ -177,7 +177,7 @@ void Cell::CalReq(pin in, pin out, required (&inreq)[2][2], Tr (&inTr)[2][2],
 	for (const auto j : { FALL, RISE }) { //output transition
 		for (const auto q : { FALL, RISE }) { // input transition
 			InOutTr ioTr = GetInOut(q, j);
-			if (!PossiblTr(in, outPin,MAX, ioTr)) {
+			if (!PossiblTr(in, outPin, MAX, ioTr)) {
 				continue;
 			}
 			delay maxd = outreq[MAX][j].val - tmp[MAX][ioTr];
@@ -211,6 +211,14 @@ void Cell::print() {
 void Cell::resetReq() {
 	for (auto m : PinData) {
 		m.second.resetReq();
+	}
+}
+
+void Cell::printpins(MAXMIN M, ofstream& f) {
+	for (auto& i : PinData) {
+		f << this->name << "%" << i.first << ":	";
+		i.second.Print(M,f);
+		f<<endl;
 	}
 }
 

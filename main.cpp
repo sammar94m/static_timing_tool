@@ -188,7 +188,8 @@ void print_command(vector<string>& vec) {
 			}
 			cout << endl;
 			for (auto& x : pTmp->delayTable) {
-				cout << "in " << x.first.first << " out " << x.first.second << endl;
+				cout << "in " << x.first.first << " out " << x.first.second
+						<< endl;
 				for (auto& y : x.second._16tables) {
 					for (int i = 0; i < pTmp->IN_SLOPE_POINTS.size(); i++) {
 						for (int j = 0; j < pTmp->OUT_LOAD_POINTS.size(); j++) {
@@ -218,9 +219,46 @@ void run_command(vector<string>& vec) {
 
 	}
 }
-
+unsigned int numofpaths = INT_MAX;
 void startShellCommands() {
 	string input;
+	/*
+	 * init
+	 */
+	string s;
+	unsigned int n;
+	cout << "Enter Library File:" << endl;
+	cin >> s;
+	cout << "Reading Library File" << endl;
+	LibraryFile(s);
+	cout << "Library File done" << endl;
+
+	cout << "Enter Design Constraints File:" << endl;
+	cin >> s;
+	cout << "Reading Design Constraints File" << endl;
+	DesignConstraintsFile(s);
+	cout << "Design Constraints File done" << endl;
+
+	cout << "Enter Netlist File:" << endl;
+	cin >> s;
+	cout << "Reading Netlist File" << endl;
+	NetlistFileFormat(s);
+	cout << "Netlist File done " << endl;
+
+	cout << "Enter Parasitics Interconnect File:" << endl;
+	cin >> s;
+	cout << "Reading Parasitics Interconnect File" << endl;
+	ParasiticsInterconnectFile(s);
+	cout << "Parasitics Interconnect File done " << endl;
+	MarkClks();
+
+	cout << "Enter Num of Requested pathes:" << endl;
+	cin >> n;
+	numofpaths = n;
+	cin>> s;
+	cout
+			<< "-----------------------------------------------------------------------"
+			<< endl;
 	while (1) {
 		cout << ">>";
 		std::getline(std::cin, input);
@@ -242,25 +280,8 @@ void startShellCommands() {
 		}
 	}
 }
-unsigned int numofpaths = 4;
-int main(int argc, char* argv[]) {
 
-	cout << "Reading LibraryFile" << endl;
-	LibraryFile("LibraryFile3.txt");
-	cout << "LibraryFile done" << endl;
-	cout << "Reading DesignConstraintsFile" << endl;
-	DesignConstraintsFile("DesignConstraintsFile3.txt");
-	cout << "DesignConstraintsFile done" << endl;
-	cout << "Reading NetlistFileFormat" << endl;
-	NetlistFileFormat("NetlistFileFormat3.txt");
-	cout << "NetlistFileFormat done " << endl;
-	cout << "Reading ParasiticsInterconnectFile" << endl;
-	ParasiticsInterconnectFile("ParasiticsInterconnectFile3.txt");
-	cout << "ParasiticsInterconnectFile done " << endl;
-	MarkClks();
-	cout
-			<< "-----------------------------------------------------------------------"
-			<< endl;
+int main(int argc, char* argv[]) {
 	startShellCommands();
 	return 0;
 }
