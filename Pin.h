@@ -31,6 +31,7 @@ public:
 				WC_VLD[i][j].val = (i == MAX) ? INT_MIN : INT_MAX;
 				tmp_req[i][j].val = (i == MAX) ? INT_MAX : INT_MIN;
 				tmp_vld[i][j].val = (i == MAX) ? INT_MIN : INT_MAX;
+				tmp_slope[i][j]= (i == MAX) ? INT_MIN : INT_MAX;
 			}
 		}
 	}

@@ -255,7 +255,8 @@ void startShellCommands() {
 	cout << "Enter Num of Requested pathes:" << endl;
 	cin >> n;
 	numofpaths = n;
-	cin>> s;
+	cin.clear();
+	cin.ignore();
 	cout
 			<< "-----------------------------------------------------------------------"
 			<< endl;

@@ -78,24 +78,14 @@ void OutputResults(PriorityQ<_PATH*, PATHCompare> (&PQ_P)[2]) {
 	PQ_P[MIN].Print(MIN, minpathfile);
 	minpathfile << endl << endl;
 	// PINS
-	maxpinfile<<"NAME	"
-			<<"WC_MARG_FALL	"
-			<<"WC_VLD_FALL	"
-			<<"WC_REQ_FALL	"
-			<<"WC_MARG_RISE	"
-			<<"WC_VLD_RISE	"
-			<<"WC_REQ_RISE	"<<endl;
+	maxpinfile << "NAME	" << "WC_MARG_FALL	" << "WC_VLD_FALL	" << "WC_REQ_FALL	"
+			<< "WC_MARG_RISE	" << "WC_VLD_RISE	" << "WC_REQ_RISE	" << endl;
 
-	minpinfile<<"NAME	"
-			<<"WC_MARG_FALL	"
-			<<"WC_VLD_FALL	"
-			<<"WC_REQ_FALL	"
-			<<"WC_MARG_RISE	"
-			<<"WC_VLD_RISE	"
-			<<"WC_REQ_RISE	"<<endl;
-	for(auto& c : CellsTable){
-		c.second->printpins(MAX,maxpinfile);
-		c.second->printpins(MIN,minpinfile);
+	minpinfile << "NAME	" << "WC_MARG_FALL	" << "WC_VLD_FALL	" << "WC_REQ_FALL	"
+			<< "WC_MARG_RISE	" << "WC_VLD_RISE	" << "WC_REQ_RISE	" << endl;
+	for (auto& c : CellsTable) {
+		c.second->printpins(MAX, maxpinfile);
+		c.second->printpins(MIN, minpinfile);
 	}
 	maxpathfile.close();
 	minpathfile.close();
@@ -136,9 +126,14 @@ void GraphPartition(Net& OutNet, vector<Net*>& PrimeNet,
 					PrimeNet.push_back((inputNet*) inNet);
 					std::cout << "Reached Input: " << inNet->name << endl;
 					inNet->visittime = resettime + 1;
+					((inputNet*) inNet)->Ariv.resetReq();
 				}
 			} else {
+				if (inNet->driver.first == NULL) {
+					cout << "Net " << inNet->name << " has NULL DRIVER" << endl;
+				}
 				CellQ.push(inNet->driver.first);
+
 			}
 
 		}
@@ -170,9 +165,6 @@ void ForwardPropagateValid(const vector<Net*>& inputNetVec) {
 				Cell* currCell = rcv->cell;
 				auto inPin = rcv->inPin;
 				currNet->calcRcvData(rcv, Data, inPin);
-//				if (currCell->visittime < resettime) {
-//					continue; // Cell isn't connected to current processing output
-//				} else
 				if (rcv->cell->type == FlIPFlOP) {
 					if (currNet->isClk == false
 							&& ((FlipFlop*) currCell)->endpoint == false) {
@@ -234,6 +226,8 @@ void BackwardPropagateReq(Net& OutNet) {
 		for (auto& r : OutNet.receivers) {
 			if (r->cell->type == FlIPFlOP) {
 				if (((FlipFlop*) r->cell)->endpoint) {
+					cout << "FF " << r->cell->name << " is the end point"
+							<< endl;
 					r->cell->PinData[r->inPin].CalcTmpMarg();
 					r->cell->PinData[r->inPin].updateWC();
 					OutNet.CalcDrvReq(r->cell->PinData[r->inPin].tmp_req,
@@ -327,17 +321,13 @@ void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
 		unsigned int& numbranch, bool enforcestate, Tr state) {
 //TODO: FIX STATE ENFORCEMENT
 	Net* pN = inNet;
+	Tr tr = state;
 	while (pN != NULL) {
 		if (!pN->isEndNet()) {
-			auto Rcvit = pN->getCritReciever(M, state);
+			auto Rcvit = pN->getCritReciever(M, tr);
 			cout << "Critical receiver of net: " << pN->name << " is "
 					<< (*Rcvit)->cell->name << endl;
-			Tr tr;
-			if (enforcestate == false) {
-				tr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].GETWCTrTmp(M);
-			} else {
-				tr = state;
-			}
+
 			slope inslope;
 			delay netdelay = pN->getRcvDelay(Rcvit.operator *()->cell,
 					Rcvit.operator *()->inPin);
@@ -351,12 +341,7 @@ void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
 			auto vecIT = PA->vec.end();
 			vecIT--;
 			Tr outtr;
-			if (enforcestate == false) {
-				outtr =
-						(*Rcvit)->cell->PinData[(*Rcvit)->cell->outPin].tmp_TR[M][tr];
-			} else {
-				outtr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].tmp_TR[M][tr];
-			}
+			outtr = (*Rcvit)->cell->PinData[(*Rcvit)->inPin].tmp_TR[M][tr];
 			cout << "Pushed Net " << pN->name << " to path" << endl;
 			pN->RecordBS(PA, vecIT, Rcvit, PATHMARG, BS, M, tr);
 			InOutTr j = GetInOut(tr, outtr);
@@ -370,6 +355,7 @@ void BSAux(Net* inNet, MAXMIN M, _PATH* PA, margin PATHMARG,
 			numbranch = BS.getSize();
 			maxdiscovered = max(maxdiscovered, BS.GetMAX());
 			pN = (*Rcvit)->cell->outNet;
+			tr = outtr;
 		} else {
 			PushNet(*pN, PA, M);
 			cout << "Pushed Net " << pN->name << " to path" << endl;

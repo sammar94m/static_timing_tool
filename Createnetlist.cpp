@@ -292,10 +292,9 @@ void NetlistFileFormat(const string& filename) {
 					if (vec[0] == "IN") {
 						Net* driverNet = NULL;
 						driverNet = NetsTable.find(vec[2])->second;
-
 						if (!driverNet) {
-
 							driverNet = new Net(vec[2], false);
+							NetsTable[vec[2]] = driverNet;
 						}
 						driverNet->add_receiver(cell, vec[1]);
 						cell->inMap[vec[1]] = driverNet;

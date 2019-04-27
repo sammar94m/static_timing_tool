@@ -143,6 +143,7 @@ void Cell::CalcOutputData() {
 	visited = true;
 }
 void Cell::CalcInputReq() {
+	cout<<"Calculating req for cell	" << name<<endl;
 	const PinDat& Dat = PinData[outPin];
 	for (auto& pair : PinData) {
 		auto& in_Pin = pair.first;
@@ -173,20 +174,27 @@ void Cell::CalReq(pin in, pin out, required (&inreq)[2][2], Tr (&inTr)[2][2],
 			tmp[i][j] = DelCache[key]; //TODO: fix missing tr
 		}
 	}
+	cout<<"in pin "<<in<<" out pin "<<out<<endl;
 	delay tmp_req[2][2] = { INT_MIN, INT_MIN, INT_MAX, INT_MAX };
 	for (const auto j : { FALL, RISE }) { //output transition
 		for (const auto q : { FALL, RISE }) { // input transition
+			cout<<"in TR: "<<Trtostring(q)<<" out TR: "<<Trtostring(j)<<endl;
 			InOutTr ioTr = GetInOut(q, j);
 			if (!PossiblTr(in, outPin, MAX, ioTr)) {
+				cout<<"Skipped"<<endl;
 				continue;
 			}
 			delay maxd = outreq[MAX][j].val - tmp[MAX][ioTr];
 			delay mind = outreq[MIN][j].val - tmp[MIN][ioTr];
-			if (maxd < tmp_req[MAX][j]) {
+			cout<<"maxd = "<<maxd<<endl;
+			cout<<"mind = "<<mind<<endl;
+			if (maxd < tmp_req[MAX][q]) {
+				cout<<"MAX REQ TAKEN"<<endl;
 				tmp_req[MAX][q] = maxd;
 				inTr[MAX][q] = j;
 			}
-			if (mind > tmp_req[MIN][j]) {
+			if (mind > tmp_req[MIN][q]) {
+				cout<<"MIN REQ TAKEN"<<endl;
 				tmp_req[MIN][q] = mind;
 				inTr[MIN][q] = j;
 			}
@@ -209,7 +217,7 @@ void Cell::print() {
 }
 
 void Cell::resetReq() {
-	for (auto m : PinData) {
+	for (auto& m : PinData) {
 		m.second.resetReq();
 	}
 }

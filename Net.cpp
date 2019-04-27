@@ -9,11 +9,12 @@
 #include "InputNet.h"
 #include "Flipflop.h"
 Net::Net(string _name, netType _type, bool _isClk) :
-		name(_name), type(_type), isClk(_isClk),visited(false),visittime(0) {
+		name(_name), type(_type), isClk(_isClk), visited(false), visittime(0) {
 }
 
 Net::Net(string name, bool isClk) :
-		name(name), type(_netType::LOCAL), isClk(isClk),visited(false),visittime(0) {
+		name(name), type(_netType::LOCAL), isClk(isClk), visited(false), visittime(
+				0) {
 }
 
 Net::~Net() {
@@ -82,7 +83,8 @@ void Net::CalcDrvReq(const required (&rcvreq)[2][2], Cell* rcv, pin rcvpin) {
 						rcvreq[MAX][j].tag;
 			}
 		}
-		cout<<"updating WC MARG for "<<this->driver.first->name<<"%"<<this->driver.second<<endl;
+		cout << "updating WC MARG for " << this->driver.first->name << "%"
+				<< this->driver.second << endl;
 		driver.first->PinData[driver.second].CalcTmpMarg();
 		driver.first->PinData[driver.second].updateWC();
 	}
@@ -106,7 +108,11 @@ void Net::calcRcvData(receiver* pRcv, const PinDat& Data, pin inPin) {
 		}
 	}
 	pCell->PinData[inPin] = RcvDat;
-	pCell->ready_inputs++;
+	if (pRcv->cell->type == FlIPFlOP && isClk == false) {
+	} else {
+		pCell->ready_inputs++;
+	}
+
 
 }
 PinDat Net::getDrvData() {
@@ -118,15 +124,15 @@ bool CompPRcv(receiver* lhs, receiver* rhs) {
 	return lhs->cell->PinData[lhs->inPin].tmp_marg[M][state]
 			< rhs->cell->PinData[rhs->inPin].tmp_marg[M][state];
 }
-list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE,Tr tr) {
+list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE, Tr tr) {
 	list<receiver*>::iterator j;
 	list<receiver*> tmp;
 	M = MODE;
-	state=tr;
+	state = tr;
 	for (auto i : this->receivers) {
-		if(i->cell->type==FlIPFlOP){
+		if (i->cell->type == FlIPFlOP) {
 			if (this->isClk == false
-					&& ((FlipFlop*)(i->cell))->endpoint == false) {
+					&& ((FlipFlop*) (i->cell))->endpoint == false) {
 				continue;
 			}
 		}
@@ -139,36 +145,36 @@ list<receiver*>::iterator Net::getCritReciever(MAXMIN MODE,Tr tr) {
 
 	return j;
 }
-bool Net::isEndNet(){
-	if(type==OUTPUT){
+bool Net::isEndNet() {
+	if (type == OUTPUT) {
 		return true;
-	}else{
+	} else {
 		for (auto i : this->receivers) {
-			if(i->cell->type==FlIPFlOP){
+			if (i->cell->type == FlIPFlOP) {
 				if (this->isClk == false
-						&& ((FlipFlop*)(i->cell))->endpoint == true) {
+						&& ((FlipFlop*) (i->cell))->endpoint == true) {
 					return true;
 				}
 			}
 
 		}
-	return false;
+		return false;
 	}
 }
-receiver* Net::GetEnd(){
-	if(type==OUTPUT){
+receiver* Net::GetEnd() {
+	if (type == OUTPUT) {
 		return NULL;
-	}else{
+	} else {
 		for (auto i : this->receivers) {
-			if(i->cell->type==FlIPFlOP){
+			if (i->cell->type == FlIPFlOP) {
 				if (this->isClk == false
-						&& ((FlipFlop*)(i->cell))->endpoint == true) {
+						&& ((FlipFlop*) (i->cell))->endpoint == true) {
 					return i;
 				}
 			}
 
 		}
-	return NULL;
+		return NULL;
 	}
 }
 void Net::RecordBS(_PATH* pPA, path_vec::iterator PA,
@@ -176,9 +182,9 @@ void Net::RecordBS(_PATH* pPA, path_vec::iterator PA,
 		PriorityQ<branchslack, BRANCHCompare>& BS, MAXMIN MODE, Tr state) {
 	margin refmarg = (*ref)->cell->PinData[(*ref)->inPin].tmp_marg[MODE][state];
 	for (auto i = this->receivers.begin(); i != this->receivers.end(); i++) {
-		if((*i)->cell->type==FlIPFlOP){
+		if ((*i)->cell->type == FlIPFlOP) {
 			if (this->isClk == false
-					&& ((FlipFlop*)((*i)->cell))->endpoint == false) {
+					&& ((FlipFlop*) ((*i)->cell))->endpoint == false) {
 				continue;
 			}
 		}
